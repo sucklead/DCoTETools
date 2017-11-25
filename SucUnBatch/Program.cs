@@ -10,18 +10,18 @@ namespace UnBatch
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length < 3)
             {
                 Console.WriteLine("SucUnBatch by sucklead (http://dcotetools.sucklead.com/p/sucunbatch.html)");
                 Console.WriteLine("To un-batch a single bat file into an output directory:");
-                Console.WriteLine("SucUnBatch {input batchfile} {output directory}");
+                Console.WriteLine("SucUnBatch {input batchfile} {output directory} {file list directory}");
                 Console.WriteLine("e.g to extract 01_house.bat files to bin directory:");
-                Console.WriteLine("SucUnBatch 01_house.bat bin");
+                Console.WriteLine("SucUnBatch 01_house.bat bin .");
                 Console.WriteLine();
                 Console.WriteLine("To un-batch all bat files in a directory into an output directory:");
-                Console.WriteLine("SucUnBatch {input directory} {output directory}");
+                Console.WriteLine("SucUnBatch {input directory} {output directory} {file list directory}");
                 Console.WriteLine("e.g To extract all .bat files in current directory to bin directory:");
-                Console.WriteLine("SucUnBatch . bin");
+                Console.WriteLine("SucUnBatch . bin .");
                 return;
             }
 
@@ -32,6 +32,8 @@ namespace UnBatch
                 Cutter cutter = new Cutter();
                 //cutter.OutputDirectory = @"C:\temp\cut";
                 cutter.OutputDirectory = args[1];
+
+                cutter.FileListDirectory = args[2];
 
                 if (!Directory.Exists(cutter.OutputDirectory))
                 {
@@ -49,7 +51,7 @@ namespace UnBatch
                     string[] batFiles = Directory.GetFiles(batfile, "*.bat");
                     foreach (string file in batFiles)
                     {
-                        if (file.Contains("original"))
+                        if (file.Contains("original.bat"))
                         {
                             continue;
                         }

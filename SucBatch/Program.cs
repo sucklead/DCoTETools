@@ -10,20 +10,20 @@ namespace SucBatch
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length != 3)
             {
                 Console.WriteLine("SucBatch by sucklead (http://dcotetools.sucklead.com/p/sucbatch.html)");
                 Console.WriteLine("To batch a single lst file into a batch file");
-                Console.WriteLine("SucBatch {batchfiles directory} {input list filename} {output batchfile}");
+                Console.WriteLine("SucBatch {binfiles directory} {input list filename} {output batchfile}");
                 Console.WriteLine("e.g. To build 01_house.lst into 01_house.bat with the bin files");
                 Console.WriteLine("from directory bin:");
                 Console.WriteLine("SucBatch bin 01_house.lst 01_house.bat");
                 Console.WriteLine();
                 Console.WriteLine("To batch all list files in a directory into matching bat files");
-                Console.WriteLine("SucBatch {batchfiles directory} {input list files directory}");
+                Console.WriteLine("SucBatch {binfiles directory} {file list directory} {output batchfile directory}");
                 Console.WriteLine("e.g. To build all .lst files in current directory into matching");
-                Console.WriteLine("bin files from directory bin:");
-                Console.WriteLine("SucBatch bin .");
+                Console.WriteLine("bat files from directory bin:");
+                Console.WriteLine("SucBatch bin . .");
                 return;
             }
 
@@ -39,10 +39,10 @@ namespace SucBatch
                     return;
                 }
 
-                batcher.BatchFileDirectory = binariesDirectory;
+                batcher.BinFileDirectory = args[0];
 
                 //directory based?
-                if (args.Length == 2)
+                if (Directory.Exists(args[1]))
                 {
                     string inputDirectory = args[1];
                     if (!Directory.Exists(inputDirectory))
@@ -51,11 +51,21 @@ namespace SucBatch
                         return;
                     }
 
-                    string[] lstFiles = Directory.GetFiles(inputDirectory, "*.lst");
+                    string listfilesDirectory = args[1];
+                    string batchfilesDirectory = args[2];
+
+                    string[] lstFiles = Directory.GetFiles(listfilesDirectory, "*.lst");
+
+                    if (lstFiles.Length == 0)
+                    {
+                        Console.WriteLine("No .lst files found!");
+                        return;
+                    }
+
                     foreach (string file in lstFiles)
                     {
                         batcher.InputFilename = file;
-                        batcher.OutputFilename = Path.GetFileNameWithoutExtension(file) + ".bat";
+                        batcher.OutputFilename = Path.Combine(batchfilesDirectory, Path.GetFileNameWithoutExtension(file) + ".bat");
 
                         if (File.Exists(batcher.OutputFilename)
                             && !File.Exists(batcher.OutputFilename + ".orig"))

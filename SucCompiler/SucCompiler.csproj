@@ -82,14 +82,6 @@
     <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.2.4.0\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Roslyn.Compilers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Roslyn.1.0.11014.5\lib\net40\Roslyn.Compilers.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="Roslyn.Compilers.CSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Roslyn.1.0.11014.5\lib\net40\Roslyn.Compilers.CSharp.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.AppContext, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.AppContext.4.3.0\lib\net46\System.AppContext.dll</HintPath>
@@ -211,10 +203,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\Games\Call Of Cthulhu DCoTE\Scripts\"
-copy /Y "$(TargetDir)\functiontable.csv" "S:\Games\Call Of Cthulhu DCoTE\Scripts\"
-copy /Y "$(TargetPath)" "S:\Tools\eclipse\DCoTETools"
-copy /Y "$(TargetDir)\functiontable.csv" "S:\Tools\eclipse\DCoTETools\"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\workspaces\DCoTEIDE\DCoTE\tools\"
+copy /Y "$(TargetDir)\functiontable.csv" "S:\workspaces\DCoTEIDE\DCoTE\tools\"
+copy /Y "$(TargetDir)\*.dll" "S:\workspaces\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

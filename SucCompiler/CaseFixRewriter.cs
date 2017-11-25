@@ -2,38 +2,41 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Roslyn.Compilers.CSharp;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CocCompiler
 {
-    class CaseFixRewriter : SyntaxRewriter
+    class CaseFixRewriter : CSharpSyntaxRewriter
     {
-        protected override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
+        //protected override CSharpSyntaxVisitor
+        public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
         {
             if (node.Identifier.ValueText == "While")
             {
                 SyntaxToken token = node.Identifier;
-                SyntaxToken newToken = Syntax.Identifier(token.LeadingTrivia, "while", token.TrailingTrivia);
+                SyntaxToken newToken = SyntaxFactory.Identifier(token.LeadingTrivia, "while", token.TrailingTrivia);
 
-                IdentifierNameSyntax newNode = Syntax.IdentifierName(newToken);
+                IdentifierNameSyntax newNode = SyntaxFactory.IdentifierName(newToken);
 
                 return node.ReplaceNode(node, newNode);
             }
             else if (node.Identifier.ValueText == "If")
             {
                 SyntaxToken token = node.Identifier;
-                SyntaxToken newToken = Syntax.Identifier(token.LeadingTrivia, "if", token.TrailingTrivia);
+                SyntaxToken newToken = SyntaxFactory.Identifier(token.LeadingTrivia, "if", token.TrailingTrivia);
 
-                IdentifierNameSyntax newNode = Syntax.IdentifierName(newToken);
+                IdentifierNameSyntax newNode = SyntaxFactory.IdentifierName(newToken);
 
                 return node.ReplaceNode(node, newNode);
             }
             else if (node.Identifier.ValueText == "Else")
             {
                 SyntaxToken token = node.Identifier;
-                SyntaxToken newToken = Syntax.Identifier(token.LeadingTrivia, "else", token.TrailingTrivia);
+                SyntaxToken newToken = SyntaxFactory.Identifier(token.LeadingTrivia, "else", token.TrailingTrivia);
 
-                IdentifierNameSyntax newNode = Syntax.IdentifierName(newToken);
+                IdentifierNameSyntax newNode = SyntaxFactory.IdentifierName(newToken);
 
                 return node.ReplaceNode(node, newNode);
             }

@@ -12,6 +12,7 @@ namespace UnBatch
         
         public string BatFilename { get; set; }
         public string OutputDirectory { get; set; }
+        public string FileListDirectory { get; set; }
         public string FileList { get; set; }
 
         public void Cut()
@@ -21,8 +22,14 @@ namespace UnBatch
                 return;
             }
 
-            FileList = Path.Combine(".", Path.GetFileNameWithoutExtension(BatFilename) + ".lst");
-            
+            if (FileListDirectory != "")
+            {
+                FileList = Path.Combine(FileListDirectory, Path.GetFileNameWithoutExtension(BatFilename) + ".lst");
+            }
+            else
+            {
+                FileList = Path.Combine(".", Path.GetFileNameWithoutExtension(BatFilename) + ".lst");
+            }
             using (StreamWriter fileListWriter = new StreamWriter(FileList)) //File.OpenWrite(FileList))
             {
 

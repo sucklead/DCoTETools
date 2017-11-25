@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Roslyn.Compilers.CSharp;
-using Roslyn.Compilers;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CocCompiler.OpCodes;
 
 namespace CocCompiler
@@ -59,7 +60,7 @@ namespace CocCompiler
 
         private Stack<OP_JMP> ElseJmps = new Stack<OP_JMP>();
 
-        private SyntaxTree tree;
+        private CSharpSyntaxTree tree;
 
         #region Base
 
@@ -130,20 +131,24 @@ namespace CocCompiler
             //    SyntaxToken newtoken = Syntax.ex ("", "");
             //    //token.ValueText = "while";
             //}
-            ParseOptions parseOptions = new ParseOptions(CompatibilityMode.None, LanguageVersion.CSharp1, null, false, SourceCodeKind.Script);
-            
-            SyntaxNode newRoot = new CaseFixRewriter().Visit(root);
+            //ParseOptions parseOptions = new ParseOptions(CompatibilityMode.None, LanguageVersion.CSharp1, null, false, SourceCodeKind.Script);
+            CSharpParseOptions cSharpParseOptions = new CSharpParseOptions(LanguageVersion.CSharp1, DocumentationMode.Parse, SourceCodeKind.Script);
 
-            tree = SyntaxTree.ParseCompilationUnit(newRoot.GetFullText(), options: parseOptions);
-            
+            CSharpSyntaxRewriter cSharpSyntaxRewriter = new CaseFixRewriter();
+            SyntaxNode newRoot = cSharpSyntaxRewriter.Visit(root); // new CaseFixRewriter().Visit(root);
+
+            //tree = SyntaxTree.ParseCompilationUnit(newRoot.GetFullText(), options: parseOptions);
+            tree = CSharpSyntaxTree.ParseText(newRoot.GetText(), options: cSharpParseOptions) as CSharpSyntaxTree;
+
             //tree = SyntaxTree.Create(tree.FileName, (CompilationUnitSyntax)newRoot, options: parseOptions);
             //Console.WriteLine(tree.Root.GetFullText());
             //Console.ReadLine();
 
             //string strings = tree.Root.GetFullText();
-            
 
-            return (CompilationUnitSyntax)tree.Root;
+
+            //return (CompilationUnitSyntax)tree.Root;
+            return tree.GetCompilationUnitRoot();
         }
 
         public CompilationUnitSyntax Parse()
@@ -154,15 +159,17 @@ namespace CocCompiler
             //Console.WriteLine("---Input---\n");
             //Console.WriteLine(source_text);
 
-            ParseOptions parseOptions = new ParseOptions(CompatibilityMode.None, LanguageVersion.CSharp1, null, false, SourceCodeKind.Script);
+            //ParseOptions parseOptions = new ParseOptions(CompatibilityMode.None, LanguageVersion.CSharp1, null, false, SourceCodeKind.Script);
+            CSharpParseOptions cSharpParseOptions = new CSharpParseOptions(LanguageVersion.CSharp1, DocumentationMode.Parse, SourceCodeKind.Script);
             //var tree = SyntaxTree.ParseCompilationUnit(source_text, parseOptions);
 
             //parse and get root
             //SyntaxTree tree = SyntaxTree.ParseCompilationUnit(source_text);
-            tree = SyntaxTree.ParseCompilationUnit(source_text, options: parseOptions);
+            //tree = SyntaxTree.ParseCompilationUnit(source_text, options: parseOptions);
+            tree = CSharpSyntaxTree.ParseText(source_text, options: cSharpParseOptions) as CSharpSyntaxTree;
 
-            return (CompilationUnitSyntax)tree.Root;
-
+            //return (CompilationUnitSyntax)tree.Root;
+            return tree.GetCompilationUnitRoot();
         }
 
         public bool Compile(CompilationUnitSyntax root)
@@ -262,18 +269,18 @@ namespace CocCompiler
             //Variables.Add(variableNumber.ToString(), variable);
             //variableNumber++;
 
-            var nodes = from syntaxNodes in root.DescendentNodes()
-                        where syntaxNodes.Kind == SyntaxKind.FieldDeclaration
-                           || syntaxNodes.Kind == SyntaxKind.LocalDeclarationStatement
-                           || syntaxNodes.Kind == SyntaxKind.CharacterLiteralExpression
-                           || syntaxNodes.Kind == SyntaxKind.NumericLiteralExpression
-                           || syntaxNodes.Kind == SyntaxKind.StringLiteralExpression
+            var nodes = from syntaxNodes in root.DescendantNodes()
+                        where syntaxNodes.Kind() == SyntaxKind.FieldDeclaration
+                           || syntaxNodes.Kind() == SyntaxKind.LocalDeclarationStatement
+                           || syntaxNodes.Kind() == SyntaxKind.CharacterLiteralExpression
+                           || syntaxNodes.Kind() == SyntaxKind.NumericLiteralExpression
+                           || syntaxNodes.Kind() == SyntaxKind.StringLiteralExpression
                         select syntaxNodes;
 
             foreach (var node in nodes)
             {
                 //how big is data?
-                if (node.Kind == SyntaxKind.FieldDeclaration)
+                if (node.Kind() == SyntaxKind.FieldDeclaration)
                 {
                     variable = new Variable()
                     {
@@ -309,7 +316,7 @@ namespace CocCompiler
 
                     //variableNumber++;
                 }
-                else if (node.Kind == SyntaxKind.LocalDeclarationStatement)
+                else if (node.Kind() == SyntaxKind.LocalDeclarationStatement)
                 {
                     variable = new Variable()
                     {
@@ -334,9 +341,9 @@ namespace CocCompiler
                     Variables.Add(variable.Name, variable);
                     //variableNumber++;
                 }
-                else if (node.Kind == SyntaxKind.CharacterLiteralExpression
-                           || node.Kind == SyntaxKind.NumericLiteralExpression
-                           || node.Kind == SyntaxKind.StringLiteralExpression)
+                else if (node.Kind() == SyntaxKind.CharacterLiteralExpression
+                           || node.Kind() == SyntaxKind.NumericLiteralExpression
+                           || node.Kind() == SyntaxKind.StringLiteralExpression)
                 {
                     LiteralExpressionSyntax literalExpression = node as LiteralExpressionSyntax;
 
@@ -348,15 +355,15 @@ namespace CocCompiler
                     };
                     nextValueAddress++;
 
-                    if (node.Kind == SyntaxKind.StringLiteralExpression)
+                    if (node.Kind() == SyntaxKind.StringLiteralExpression)
                     {
                         variable.Value = literalExpression.Token.ValueText;
 
                         //reset these values
                         variable.Name = "\"" + variable.Name + "\"";
-                        if (literalExpression.Token.GetText().Contains('\\'))
+                        if (literalExpression.Token.Text.Contains('\\')) // TODO - check this
                         {
-                            variable.Value = literalExpression.Token.GetText().Replace("\"", ""); //.TrimEnd().TrimStart();
+                            variable.Value = literalExpression.Token.Text.Replace("\"", ""); //.TrimEnd().TrimStart();
                             //variable.Value = literalExpression.Token.ValueText;
                         }
 
@@ -364,12 +371,12 @@ namespace CocCompiler
                         //variable.Reference = nextReferenceAddress;
                         //IncrementReferenceAddress(variable.DataType);
                     }
-                    else if (node.Kind == SyntaxKind.NumericLiteralExpression)
+                    else if (node.Kind() == SyntaxKind.NumericLiteralExpression)
                     {
                         if (variable.Value is double)
                         {
                             variable.DataType = DataTypeType.Float;
-                            if (node.Parent.Kind == SyntaxKind.NegateExpression)
+                            if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
                             {
                                 //variable.Value = (double)variable.Value * -1;
                                 variable.IsNegative = true;
@@ -378,7 +385,7 @@ namespace CocCompiler
                         else
                         {
                             variable.DataType = DataTypeType.Int;
-                            if (node.Parent.Kind == SyntaxKind.NegateExpression)
+                            if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
                             {
                                 //variable.Value = (Int32)variable.Value * -1;
                                 variable.IsNegative = true;
@@ -387,7 +394,7 @@ namespace CocCompiler
                         //variable.Reference = nextReferenceAddress;
                         //IncrementReferenceAddress(variable.DataType);
                     }
-                    else if (node.Kind == SyntaxKind.CharacterLiteralExpression)
+                    else if (node.Kind() == SyntaxKind.CharacterLiteralExpression)
                     {
                         variable.DataType = DataTypeType.Character;
                         //variable.Reference = nextReferenceAddress;
@@ -457,7 +464,9 @@ namespace CocCompiler
 
                     CompileNode(parenthesizedExpression.Expression);
 
-                    if (node.Parent.Kind == SyntaxKind.NegateExpression)
+                    if (node.Parent.Kind() == SyntaxKind.LogicalNotExpression // TODO - check this still works
+                        || node.Parent.Kind() == SyntaxKind.BitwiseNotExpression
+                        || node.Parent.Kind() == SyntaxKind.UnaryMinusExpression)
                     {
                         OP_NEG opNeg = new OP_NEG();
                         OpCodes.Add(opNeg);
@@ -493,7 +502,7 @@ namespace CocCompiler
                 {
                     PrefixUnaryExpressionSyntax prefixUnaryExpression = node as PrefixUnaryExpressionSyntax;
                     //a not? negatives are handled later
-                    if (prefixUnaryExpression.Kind == SyntaxKind.LogicalNotExpression)
+                    if (prefixUnaryExpression.Kind() == SyntaxKind.LogicalNotExpression)
                     {
                         CompileNode(prefixUnaryExpression.Operand);
 
@@ -513,12 +522,12 @@ namespace CocCompiler
                     OP_PUSH opPush = new OP_PUSH();
                     if (identifierName != null)
                     {
-                        opPush.DataIndex = Variables[identifierName.PlainName].Address;
-                    }
+                        opPush.DataIndex = Variables[identifierName.ToString()].Address; // TODO check this  .PlainName
+                }
                     OpCodes.Add(opPush);
 
-                    if (node.Parent.Kind == SyntaxKind.NegateExpression)
-                    {
+                    if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
+                {
                         //add a not
                         OP_NEG opNeg = new OP_NEG();
                         OpCodes.Add(opNeg);
@@ -557,7 +566,7 @@ namespace CocCompiler
                         CompileNode(argumentSyntax);
                     }
 
-                    if (identifierNameSyntax.PlainName == "Print")
+                    if (identifierNameSyntax.ToString() == "Print")
                     {
                         OP_PRINT opPrint = new OP_PRINT();
                         OpCodes.Add(opPrint);
@@ -567,7 +576,7 @@ namespace CocCompiler
                         //push the function code
                         OP_PUSH opPush = new OP_PUSH();
 
-                        if (!FunctionTable.Functions.ContainsKey(identifierNameSyntax.PlainName))
+                        if (!FunctionTable.Functions.ContainsKey(identifierNameSyntax.ToString()))
                         {
                             if (!this.AddFunctions && !this.justPatchFunctions)
                             {
@@ -576,22 +585,22 @@ namespace CocCompiler
                                 //if (!this.DirectoryBased)
                                 if (true)
                                 {
-                                    Console.WriteLine(string.Format("Missing function {0}", identifierNameSyntax.PlainName));
+                                    Console.WriteLine(string.Format("Missing function {0}", identifierNameSyntax.ToString()));
                                 }
                                 opPush.DataIndex = 0x0FF0;
                             }
                             else
                             {
-                                Console.WriteLine(string.Format("Fetching function {0}", identifierNameSyntax.PlainName));
+                                Console.WriteLine(string.Format("Fetching function {0}", identifierNameSyntax.ToString()));
 
-                                short functionPointer = FunctionTable.FindFunction(this.ScriptFilename.Replace(".hfs", ".bin"), identifierNameSyntax.PlainName, opPush.Address + 1);
+                                short functionPointer = FunctionTable.FindFunction(this.ScriptFilename.Replace(".hfs", ".bin"), identifierNameSyntax.ToString(), opPush.Address + 1);
 
                                 opPush.DataIndex = functionPointer;
                             }
                         }
                         else
                         {
-                            opPush.DataIndex = FunctionTable.Functions[identifierNameSyntax.PlainName];
+                            opPush.DataIndex = FunctionTable.Functions[identifierNameSyntax.ToString()];
                         }
                         OpCodes.Add(opPush);
 
@@ -613,7 +622,7 @@ namespace CocCompiler
                 else if (node is BinaryExpressionSyntax)
                 {
                     BinaryExpressionSyntax binaryExpression = node as BinaryExpressionSyntax;
-                    if (binaryExpression.OperatorToken.Kind == SyntaxKind.EqualsToken)
+                    if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsToken)
                     {
                         CompileNode(binaryExpression.Right);
 
@@ -621,18 +630,18 @@ namespace CocCompiler
 
                         //gettop the left
                         OP_GETTOP opGettop = new OP_GETTOP();
-                        opGettop.DataIndex = Variables[identifierName.PlainName].Address;
+                        opGettop.DataIndex = Variables[identifierName.ToString()].Address;
                         OpCodes.Add(opGettop);
 
                         //for an if we need to keep the value
-                        if (binaryExpression.Parent.Kind != SyntaxKind.IfStatement)
+                        if (binaryExpression.Parent.Kind() != SyntaxKind.IfStatement)
                         {
                             //do a discard
                             OP_DISCARD opDiscard = new OP_DISCARD();
                             OpCodes.Add(opDiscard);
                         }
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.EqualsEqualsToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsEqualsToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -641,14 +650,14 @@ namespace CocCompiler
                         OP_EQUAL opEqual = new OP_EQUAL();
                         OpCodes.Add(opEqual);
 
-                        if (node.Parent.Kind == SyntaxKind.ExpressionStatement)
+                        if (node.Parent.Kind() == SyntaxKind.ExpressionStatement)
                         {
                             //just discard the result
                             OP_DISCARD opDiscard= new OP_DISCARD();
                             OpCodes.Add(opDiscard);
                         }
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.ExclamationEqualsToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.ExclamationEqualsToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -657,7 +666,7 @@ namespace CocCompiler
                         OP_NOT_EQUAL opNotEqual = new OP_NOT_EQUAL();
                         OpCodes.Add(opNotEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.MinusToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.MinusToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -666,7 +675,7 @@ namespace CocCompiler
                         OP_MINUS opEqual = new OP_MINUS();
                         OpCodes.Add(opEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.PlusToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.PlusToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -675,7 +684,7 @@ namespace CocCompiler
                         OP_CONCAT opEqual = new OP_CONCAT();
                         OpCodes.Add(opEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.GreaterThanToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -684,7 +693,7 @@ namespace CocCompiler
                         OP_MORE_THAN opEqual = new OP_MORE_THAN();
                         OpCodes.Add(opEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.LessThanToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -693,7 +702,7 @@ namespace CocCompiler
                         OP_LESS_THAN opEqual = new OP_LESS_THAN();
                         OpCodes.Add(opEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.LessThanEqualsToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanEqualsToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -702,7 +711,7 @@ namespace CocCompiler
                         OP_LESS_THAN_OR_EQUAL opLessOrEqual = new OP_LESS_THAN_OR_EQUAL();
                         OpCodes.Add(opLessOrEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.GreaterThanEqualsToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanEqualsToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -711,7 +720,7 @@ namespace CocCompiler
                         OP_MORE_THAN_OR_EQUAL opGreatOrEqual = new OP_MORE_THAN_OR_EQUAL();
                         OpCodes.Add(opGreatOrEqual);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.BarBarToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.BarBarToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -720,7 +729,7 @@ namespace CocCompiler
                         OP_OR opOr = new OP_OR();
                         OpCodes.Add(opOr);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.AmpersandAmpersandToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AmpersandAmpersandToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -729,7 +738,7 @@ namespace CocCompiler
                         OP_AND opAnd = new OP_AND();
                         OpCodes.Add(opAnd);
                     }
-                   else if (binaryExpression.OperatorToken.Kind == SyntaxKind.AsteriskToken)
+                   else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AsteriskToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -738,7 +747,7 @@ namespace CocCompiler
                         OP_MULTIPLY opMultiply = new OP_MULTIPLY();
                         OpCodes.Add(opMultiply);
                     }
-                    else if (binaryExpression.OperatorToken.Kind == SyntaxKind.SlashToken)
+                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.SlashToken)
                     {
                         CompileNode(binaryExpression.Left);
 
@@ -785,7 +794,7 @@ namespace CocCompiler
                     CompileNode(ifStatement.Statement);
 
                     //has an else option?
-                    if (ifStatement.ElseOpt != null)
+                    if (ifStatement.Else != null) //TODO - check this works
                     {
                         OP_JMP opJmp = new OP_JMP();
                         OpCodes.Add(opJmp);
@@ -802,7 +811,7 @@ namespace CocCompiler
                     //jump is to here
                     opJmpF.DataIndex = jumpTarget.Address;
 
-                    CompileNode(ifStatement.ElseOpt);
+                    CompileNode(ifStatement.Else);
                 }
                 else if (node is ElseClauseSyntax)
                 {
@@ -1015,7 +1024,7 @@ namespace CocCompiler
 
         private DataTypeType GetType(TypeSyntax type)
         {
-            switch (type.PlainName.ToLower())
+            switch (type.ToString().ToLower())
             {
                 case "character":
                     return DataTypeType.Character;

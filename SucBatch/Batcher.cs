@@ -12,7 +12,7 @@ namespace SucBatch
 
         public string OutputFilename { get; set; }
 
-        public string BatchFileDirectory { get; set; }
+        public string BinFileDirectory { get; set; }
 
         internal bool CreateBatch()
         {
@@ -32,7 +32,7 @@ namespace SucBatch
                             continue;
                         }
 
-                        string scriptName = Path.Combine(BatchFileDirectory, script);
+                        string scriptName = Path.Combine(BinFileDirectory, script);
 
                         Console.WriteLine("Adding {0}...", scriptName);
 
