@@ -445,391 +445,412 @@ namespace CocCompiler
             //{
                 //GlobalStatementSyntax globalStatement = node as GlobalStatementSyntax;
 
-                if (node is GlobalStatementSyntax)
+            if (node is GlobalStatementSyntax)
+            {
+                node = ((GlobalStatementSyntax)node).Statement;
+            }
+
+            if (node is BlockSyntax)
+            {
+                BlockSyntax block = node as BlockSyntax;
+                foreach (StatementSyntax statement in block.Statements)
                 {
-                    node = ((GlobalStatementSyntax)node).Statement;
+                    CompileNode(statement);
+                }
+            }
+            else if (node is ParenthesizedExpressionSyntax)
+            {
+                ParenthesizedExpressionSyntax parenthesizedExpression = node as ParenthesizedExpressionSyntax;
+
+                CompileNode(parenthesizedExpression.Expression);
+
+                if (node.Parent.Kind() == SyntaxKind.LogicalNotExpression // TODO - check this still works
+                    || node.Parent.Kind() == SyntaxKind.BitwiseNotExpression
+                    || node.Parent.Kind() == SyntaxKind.UnaryMinusExpression)
+                {
+                    OP_NEG opNeg = new OP_NEG();
+                    OpCodes.Add(opNeg);
+                }
+            }
+            else if (node is ExpressionStatementSyntax)
+            {
+                ExpressionStatementSyntax expressionStatement = node as ExpressionStatementSyntax;
+
+                CompileNode(expressionStatement.Expression);
+            }
+            else if (node is LiteralExpressionSyntax)
+            {
+                LiteralExpressionSyntax literalExpression = node as LiteralExpressionSyntax;
+
+                OP_PUSH opPush = new OP_PUSH();
+                opPush.DataIndex = Literals[literalExpression].Address;
+                OpCodes.Add(opPush);
+
+                if (Literals[literalExpression].IsNegative)
+                {
+                    //push a negative on top
+                    OP_NEG opNeg = new OP_NEG();
+                    OpCodes.Add(opNeg);
                 }
 
-                if (node is BlockSyntax)
+            }
+            //else if (node is null)
+            //{
+
+            //}
+            else if (node is PrefixUnaryExpressionSyntax)
+            {
+                PrefixUnaryExpressionSyntax prefixUnaryExpression = node as PrefixUnaryExpressionSyntax;
+                //a not? negatives are handled later
+                if (prefixUnaryExpression.Kind() == SyntaxKind.LogicalNotExpression)
                 {
-                    BlockSyntax block = node as BlockSyntax;
-                    foreach (StatementSyntax statement in block.Statements)
-                    {
-                        CompileNode(statement);
-                    }
+                    CompileNode(prefixUnaryExpression.Operand);
+
+                    //add a not
+                    OP_NOT opNot = new OP_NOT();
+                    OpCodes.Add(opNot);
                 }
-                else if (node is ParenthesizedExpressionSyntax)
+                else
                 {
-                    ParenthesizedExpressionSyntax parenthesizedExpression = node as ParenthesizedExpressionSyntax;
-
-                    CompileNode(parenthesizedExpression.Expression);
-
-                    if (node.Parent.Kind() == SyntaxKind.LogicalNotExpression // TODO - check this still works
-                        || node.Parent.Kind() == SyntaxKind.BitwiseNotExpression
-                        || node.Parent.Kind() == SyntaxKind.UnaryMinusExpression)
-                    {
-                        OP_NEG opNeg = new OP_NEG();
-                        OpCodes.Add(opNeg);
-                    }
+                    CompileNode(prefixUnaryExpression.Operand);
                 }
-                else if (node is ExpressionStatementSyntax)
-                {
-                    ExpressionStatementSyntax expressionStatement = node as ExpressionStatementSyntax;
+            }
+            else if (node is IdentifierNameSyntax)
+            {
+                IdentifierNameSyntax identifierName = node as IdentifierNameSyntax;
 
-                    CompileNode(expressionStatement.Expression);
+                OP_PUSH opPush = new OP_PUSH();
+                if (identifierName != null)
+                {
+                    opPush.DataIndex = Variables[identifierName.ToString()].Address; // TODO check this  .PlainName
+            }
+                OpCodes.Add(opPush);
+
+                if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
+            {
+                    //add a not
+                    OP_NEG opNeg = new OP_NEG();
+                    OpCodes.Add(opNeg);
                 }
-                else if (node is LiteralExpressionSyntax)
-                {
-                    LiteralExpressionSyntax literalExpression = node as LiteralExpressionSyntax;
+            }
+            else if (node is ArgumentSyntax)
+            {
+                ArgumentSyntax argument = node as ArgumentSyntax;
 
+                if (argument.Expression is PrefixUnaryExpressionSyntax)
+                {
+                    //for a negative parse the operand
+                    PrefixUnaryExpressionSyntax prefixUnaryExpression = argument.Expression as PrefixUnaryExpressionSyntax;
+                    CompileNode(prefixUnaryExpression.Operand);
+                }
+                //if (argument.Expression is LiteralExpressionSyntax
+                //    || argument.Expression is IdentifierNameSyntax)
+                else
+                {
+                    CompileNode(argument.Expression);
+                }
+            }
+            //a function invocation
+            else if (node is InvocationExpressionSyntax)
+            {
+                InvocationExpressionSyntax invocationExpressionSyntax = node as InvocationExpressionSyntax;
+
+                //first we have an identifier expression
+                IdentifierNameSyntax identifierNameSyntax = invocationExpressionSyntax.Expression as IdentifierNameSyntax;
+
+                //then arguments
+                foreach (ArgumentSyntax argumentSyntax in invocationExpressionSyntax.ArgumentList.Arguments) //TODO .Reverse()?
+                {
+                    //Console.WriteLine("    [Literal]");
+                    //Console.WriteLine("    " + (LiteralExpressionSyntax)(argumentSyntax.Expression));
+                    CompileNode(argumentSyntax);
+                }
+
+                if (identifierNameSyntax.ToString() == "Print")
+                {
+                    OP_PRINT opPrint = new OP_PRINT();
+                    OpCodes.Add(opPrint);
+                }
+                else
+                {
+                    //push the function code
                     OP_PUSH opPush = new OP_PUSH();
-                    opPush.DataIndex = Literals[literalExpression].Address;
-                    OpCodes.Add(opPush);
 
-                    if (Literals[literalExpression].IsNegative)
+                    if (!FunctionTable.Functions.ContainsKey(identifierNameSyntax.ToString()))
                     {
-                        //push a negative on top
-                        OP_NEG opNeg = new OP_NEG();
-                        OpCodes.Add(opNeg);
-                    }
-
-                }
-                //else if (node is null)
-                //{
-
-                //}
-                else if (node is PrefixUnaryExpressionSyntax)
-                {
-                    PrefixUnaryExpressionSyntax prefixUnaryExpression = node as PrefixUnaryExpressionSyntax;
-                    //a not? negatives are handled later
-                    if (prefixUnaryExpression.Kind() == SyntaxKind.LogicalNotExpression)
-                    {
-                        CompileNode(prefixUnaryExpression.Operand);
-
-                        //add a not
-                        OP_NOT opNot = new OP_NOT();
-                        OpCodes.Add(opNot);
-                    }
-                    else
-                    {
-                        CompileNode(prefixUnaryExpression.Operand);
-                    }
-                }
-                else if (node is IdentifierNameSyntax)
-                {
-                    IdentifierNameSyntax identifierName = node as IdentifierNameSyntax;
-
-                    OP_PUSH opPush = new OP_PUSH();
-                    if (identifierName != null)
-                    {
-                        opPush.DataIndex = Variables[identifierName.ToString()].Address; // TODO check this  .PlainName
-                }
-                    OpCodes.Add(opPush);
-
-                    if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
-                {
-                        //add a not
-                        OP_NEG opNeg = new OP_NEG();
-                        OpCodes.Add(opNeg);
-                    }
-                }
-                else if (node is ArgumentSyntax)
-                {
-                    ArgumentSyntax argument = node as ArgumentSyntax;
-
-                    if (argument.Expression is PrefixUnaryExpressionSyntax)
-                    {
-                        //for a negative parse the operand
-                        PrefixUnaryExpressionSyntax prefixUnaryExpression = argument.Expression as PrefixUnaryExpressionSyntax;
-                        CompileNode(prefixUnaryExpression.Operand);
-                    }
-                    //if (argument.Expression is LiteralExpressionSyntax
-                    //    || argument.Expression is IdentifierNameSyntax)
-                    else
-                    {
-                        CompileNode(argument.Expression);
-                    }
-                }
-                //a function invocation
-                else if (node is InvocationExpressionSyntax)
-                {
-                    InvocationExpressionSyntax invocationExpressionSyntax = node as InvocationExpressionSyntax;
-
-                    //first we have an identifier expression
-                    IdentifierNameSyntax identifierNameSyntax = invocationExpressionSyntax.Expression as IdentifierNameSyntax;
-
-                    //then arguments
-                    foreach (ArgumentSyntax argumentSyntax in invocationExpressionSyntax.ArgumentList.Arguments) //TODO .Reverse()?
-                    {
-                        //Console.WriteLine("    [Literal]");
-                        //Console.WriteLine("    " + (LiteralExpressionSyntax)(argumentSyntax.Expression));
-                        CompileNode(argumentSyntax);
-                    }
-
-                    if (identifierNameSyntax.ToString() == "Print")
-                    {
-                        OP_PRINT opPrint = new OP_PRINT();
-                        OpCodes.Add(opPrint);
-                    }
-                    else
-                    {
-                        //push the function code
-                        OP_PUSH opPush = new OP_PUSH();
-
-                        if (!FunctionTable.Functions.ContainsKey(identifierNameSyntax.ToString()))
+                        if (!this.AddFunctions && !this.justPatchFunctions)
                         {
-                            if (!this.AddFunctions && !this.justPatchFunctions)
+                            hasMissingFunctions = true;
+
+                            //if (!this.DirectoryBased)
+                            if (true)
                             {
-                                hasMissingFunctions = true;
-
-                                //if (!this.DirectoryBased)
-                                if (true)
-                                {
-                                    Console.WriteLine(string.Format("Missing function {0}", identifierNameSyntax.ToString()));
-                                }
-                                opPush.DataIndex = 0x0FF0;
+                                Console.WriteLine(string.Format("Missing function {0}", identifierNameSyntax.ToString()));
                             }
-                            else
-                            {
-                                Console.WriteLine(string.Format("Fetching function {0}", identifierNameSyntax.ToString()));
-
-                                short functionPointer = FunctionTable.FindFunction(this.ScriptFilename.Replace(".hfs", ".bin"), identifierNameSyntax.ToString(), opPush.Address + 1);
-
-                                opPush.DataIndex = functionPointer;
-                            }
+                            opPush.DataIndex = 0x0FF0;
                         }
                         else
                         {
-                            opPush.DataIndex = FunctionTable.Functions[identifierNameSyntax.ToString()];
+                            Console.WriteLine(string.Format("Fetching function {0}", identifierNameSyntax.ToString()));
+
+                            short functionPointer = FunctionTable.FindFunction(this.ScriptFilename.Replace(".hfs", ".bin"), identifierNameSyntax.ToString(), opPush.Address + 1);
+
+                            opPush.DataIndex = functionPointer;
                         }
-                        OpCodes.Add(opPush);
+                    }
+                    else
+                    {
+                        opPush.DataIndex = FunctionTable.Functions[identifierNameSyntax.ToString()];
+                    }
+                    OpCodes.Add(opPush);
 
-                        //add function call
-                        OP_FUNCTION opFunction = new OP_FUNCTION();
-                        OpCodes.Add(opFunction);
+                    //add function call
+                    OP_FUNCTION opFunction = new OP_FUNCTION();
+                    OpCodes.Add(opFunction);
 
+                    //do a discard
+                    if (node.Parent is BinaryExpressionSyntax
+                        || node.Parent is AssignmentExpressionSyntax)
+                    {
+                    }
+                    else
+                    {
+                        OP_DISCARD opDiscard = new OP_DISCARD();
+                        OpCodes.Add(opDiscard);
+                    }
+                }
+            }
+            else if (node is AssignmentExpressionSyntax)
+            {
+                AssignmentExpressionSyntax assignmentExpression = node as AssignmentExpressionSyntax;
+                CompileNode(assignmentExpression.Right);
+
+                IdentifierNameSyntax identifierName = assignmentExpression.Left as IdentifierNameSyntax;
+
+                //gettop the left
+                OP_GETTOP opGettop = new OP_GETTOP();
+                opGettop.DataIndex = Variables[identifierName.ToString()].Address;
+                OpCodes.Add(opGettop);
+
+                //for an if we need to keep the value
+                if (assignmentExpression.Parent.Kind() != SyntaxKind.IfStatement)
+                {
+                    //do a discard
+                    OP_DISCARD opDiscard = new OP_DISCARD();
+                    OpCodes.Add(opDiscard);
+                }
+            }
+            else if (node is BinaryExpressionSyntax)
+            {
+                BinaryExpressionSyntax binaryExpression = node as BinaryExpressionSyntax;
+                if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsToken)
+                {
+                    CompileNode(binaryExpression.Right);
+
+                    IdentifierNameSyntax identifierName = binaryExpression.Left as IdentifierNameSyntax;
+
+                    //gettop the left
+                    OP_GETTOP opGettop = new OP_GETTOP();
+                    opGettop.DataIndex = Variables[identifierName.ToString()].Address;
+                    OpCodes.Add(opGettop);
+
+                    //for an if we need to keep the value
+                    if (binaryExpression.Parent.Kind() != SyntaxKind.IfStatement)
+                    {
                         //do a discard
-                        if (node.Parent is BinaryExpressionSyntax)
-                        {
-                        }
-                        else
-                        {
-                            OP_DISCARD opDiscard = new OP_DISCARD();
-                            OpCodes.Add(opDiscard);
-                        }
+                        OP_DISCARD opDiscard = new OP_DISCARD();
+                        OpCodes.Add(opDiscard);
                     }
                 }
-                else if (node is BinaryExpressionSyntax)
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsEqualsToken)
                 {
-                    BinaryExpressionSyntax binaryExpression = node as BinaryExpressionSyntax;
-                    if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsToken)
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_EQUAL opEqual = new OP_EQUAL();
+                    OpCodes.Add(opEqual);
+
+                    if (node.Parent.Kind() == SyntaxKind.ExpressionStatement)
                     {
-                        CompileNode(binaryExpression.Right);
-
-                        IdentifierNameSyntax identifierName = binaryExpression.Left as IdentifierNameSyntax;
-
-                        //gettop the left
-                        OP_GETTOP opGettop = new OP_GETTOP();
-                        opGettop.DataIndex = Variables[identifierName.ToString()].Address;
-                        OpCodes.Add(opGettop);
-
-                        //for an if we need to keep the value
-                        if (binaryExpression.Parent.Kind() != SyntaxKind.IfStatement)
-                        {
-                            //do a discard
-                            OP_DISCARD opDiscard = new OP_DISCARD();
-                            OpCodes.Add(opDiscard);
-                        }
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.EqualsEqualsToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_EQUAL opEqual = new OP_EQUAL();
-                        OpCodes.Add(opEqual);
-
-                        if (node.Parent.Kind() == SyntaxKind.ExpressionStatement)
-                        {
-                            //just discard the result
-                            OP_DISCARD opDiscard= new OP_DISCARD();
-                            OpCodes.Add(opDiscard);
-                        }
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.ExclamationEqualsToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_NOT_EQUAL opNotEqual = new OP_NOT_EQUAL();
-                        OpCodes.Add(opNotEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.MinusToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_MINUS opEqual = new OP_MINUS();
-                        OpCodes.Add(opEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.PlusToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_CONCAT opEqual = new OP_CONCAT();
-                        OpCodes.Add(opEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_MORE_THAN opEqual = new OP_MORE_THAN();
-                        OpCodes.Add(opEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_LESS_THAN opEqual = new OP_LESS_THAN();
-                        OpCodes.Add(opEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanEqualsToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_LESS_THAN_OR_EQUAL opLessOrEqual = new OP_LESS_THAN_OR_EQUAL();
-                        OpCodes.Add(opLessOrEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanEqualsToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_MORE_THAN_OR_EQUAL opGreatOrEqual = new OP_MORE_THAN_OR_EQUAL();
-                        OpCodes.Add(opGreatOrEqual);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.BarBarToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_OR opOr = new OP_OR();
-                        OpCodes.Add(opOr);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AmpersandAmpersandToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_AND opAnd = new OP_AND();
-                        OpCodes.Add(opAnd);
-                    }
-                   else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AsteriskToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_MULTIPLY opMultiply = new OP_MULTIPLY();
-                        OpCodes.Add(opMultiply);
-                    }
-                    else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.SlashToken)
-                    {
-                        CompileNode(binaryExpression.Left);
-
-                        CompileNode(binaryExpression.Right);
-
-                        OP_DIVIDE opDivide = new OP_DIVIDE();
-                        OpCodes.Add(opDivide);
+                        //just discard the result
+                        OP_DISCARD opDiscard= new OP_DISCARD();
+                        OpCodes.Add(opDiscard);
                     }
                 }
-                else if (node is WhileStatementSyntax)
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.ExclamationEqualsToken)
                 {
-                    WhileStatementSyntax whileStatement = node as WhileStatementSyntax;
+                    CompileNode(binaryExpression.Left);
 
-                    short whileAddress = OpCode.NextAddress;
+                    CompileNode(binaryExpression.Right);
 
-                    CompileNode(whileStatement.Condition);
+                    OP_NOT_EQUAL opNotEqual = new OP_NOT_EQUAL();
+                    OpCodes.Add(opNotEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.MinusToken)
+                {
+                    CompileNode(binaryExpression.Left);
 
-                    //look at the condition here
-                    OP_JMPF opJmpF = new OP_JMPF();
-                    OpCodes.Add(opJmpF);
+                    CompileNode(binaryExpression.Right);
 
-                    CompileNode(whileStatement.Statement);
+                    OP_MINUS opEqual = new OP_MINUS();
+                    OpCodes.Add(opEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.PlusToken)
+                {
+                    CompileNode(binaryExpression.Left);
 
-                    //jmp back to the condition
+                    CompileNode(binaryExpression.Right);
+
+                    OP_CONCAT opEqual = new OP_CONCAT();
+                    OpCodes.Add(opEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_MORE_THAN opEqual = new OP_MORE_THAN();
+                    OpCodes.Add(opEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_LESS_THAN opEqual = new OP_LESS_THAN();
+                    OpCodes.Add(opEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.LessThanEqualsToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_LESS_THAN_OR_EQUAL opLessOrEqual = new OP_LESS_THAN_OR_EQUAL();
+                    OpCodes.Add(opLessOrEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.GreaterThanEqualsToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_MORE_THAN_OR_EQUAL opGreatOrEqual = new OP_MORE_THAN_OR_EQUAL();
+                    OpCodes.Add(opGreatOrEqual);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.BarBarToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_OR opOr = new OP_OR();
+                    OpCodes.Add(opOr);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AmpersandAmpersandToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_AND opAnd = new OP_AND();
+                    OpCodes.Add(opAnd);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.AsteriskToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_MULTIPLY opMultiply = new OP_MULTIPLY();
+                    OpCodes.Add(opMultiply);
+                }
+                else if (binaryExpression.OperatorToken.Kind() == SyntaxKind.SlashToken)
+                {
+                    CompileNode(binaryExpression.Left);
+
+                    CompileNode(binaryExpression.Right);
+
+                    OP_DIVIDE opDivide = new OP_DIVIDE();
+                    OpCodes.Add(opDivide);
+                }
+            }
+            else if (node is WhileStatementSyntax)
+            {
+                WhileStatementSyntax whileStatement = node as WhileStatementSyntax;
+
+                short whileAddress = OpCode.NextAddress;
+
+                CompileNode(whileStatement.Condition);
+
+                //look at the condition here
+                OP_JMPF opJmpF = new OP_JMPF();
+                OpCodes.Add(opJmpF);
+
+                CompileNode(whileStatement.Statement);
+
+                //jmp back to the condition
+                OP_JMP opJmp = new OP_JMP();
+                opJmp.DataIndex = whileAddress;
+                OpCodes.Add(opJmp);
+
+                //jump over the jmp back
+                opJmpF.DataIndex = (short)(opJmp.Address + 3);
+            }
+            else if (node is IfStatementSyntax)
+            {
+                IfStatementSyntax ifStatement = node as IfStatementSyntax;
+
+                //look at the condition here
+                CompileNode(ifStatement.Condition);
+
+                short ifAddress = OpCode.NextAddress;
+                //do a jump to end if condition is false
+                OP_JMPF opJmpF = new OP_JMPF();
+                OpCodes.Add(opJmpF);
+
+                CompileNode(ifStatement.Statement);
+
+                //has an else option?
+                if (ifStatement.Else != null) //TODO - check this works
+                {
                     OP_JMP opJmp = new OP_JMP();
-                    opJmp.DataIndex = whileAddress;
                     OpCodes.Add(opJmp);
 
-                    //jump over the jmp back
-                    opJmpF.DataIndex = (short)(opJmp.Address + 3);
+                    //save this as the else jump so we can hook it up later
+                    this.ElseJmps.Push(opJmp);
                 }
-                else if (node is IfStatementSyntax)
-                {
-                    IfStatementSyntax ifStatement = node as IfStatementSyntax;
 
-                    //look at the condition here
-                    CompileNode(ifStatement.Condition);
+                //add in the jump target
+                JUMPTARGET jumpTarget = new JUMPTARGET();
+                jumpTarget.DataIndex = ifAddress;
+                OpCodes.Add(jumpTarget);
 
-                    short ifAddress = OpCode.NextAddress;
-                    //do a jump to end if condition is false
-                    OP_JMPF opJmpF = new OP_JMPF();
-                    OpCodes.Add(opJmpF);
+                //jump is to here
+                opJmpF.DataIndex = jumpTarget.Address;
 
-                    CompileNode(ifStatement.Statement);
+                CompileNode(ifStatement.Else);
+            }
+            else if (node is ElseClauseSyntax)
+            {
+                ElseClauseSyntax elseClause = node as ElseClauseSyntax;
 
-                    //has an else option?
-                    if (ifStatement.Else != null) //TODO - check this works
-                    {
-                        OP_JMP opJmp = new OP_JMP();
-                        OpCodes.Add(opJmp);
+                CompileNode(elseClause.Statement);
 
-                        //save this as the else jump so we can hook it up later
-                        this.ElseJmps.Push(opJmp);
-                    }
+                //pop off last one
+                OP_JMP opJmp = this.ElseJmps.Pop();
 
-                    //add in the jump target
-                    JUMPTARGET jumpTarget = new JUMPTARGET();
-                    jumpTarget.DataIndex = ifAddress;
-                    OpCodes.Add(jumpTarget);
+                //add in the jump target
+                JUMPTARGET jumpTarget = new JUMPTARGET();
+                jumpTarget.DataIndex = opJmp.Address;
+                OpCodes.Add(jumpTarget);
 
-                    //jump is to here
-                    opJmpF.DataIndex = jumpTarget.Address;
-
-                    CompileNode(ifStatement.Else);
-                }
-                else if (node is ElseClauseSyntax)
-                {
-                    ElseClauseSyntax elseClause = node as ElseClauseSyntax;
-
-                    CompileNode(elseClause.Statement);
-
-                    //pop off last one
-                    OP_JMP opJmp = this.ElseJmps.Pop();
-
-                    //add in the jump target
-                    JUMPTARGET jumpTarget = new JUMPTARGET();
-                    jumpTarget.DataIndex = opJmp.Address;
-                    OpCodes.Add(jumpTarget);
-
-                    //jump is to here
-                    opJmp.DataIndex = jumpTarget.Address;
-                }
+                //jump is to here
+                opJmp.DataIndex = jumpTarget.Address;
+            }
 
             //}
             //else if (node is BlockSyntax)

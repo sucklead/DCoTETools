@@ -105,6 +105,7 @@ namespace CocCompiler
             //save function table if anything has changed
             FunctionTable.SaveData();
 
+            Console.WriteLine("Compile complete.");
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
         }
