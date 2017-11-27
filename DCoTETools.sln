@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SucCompiler", "SucCompiler\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SucDecompiler", "SucDecompiler\SucDecompiler.csproj", "{6EFB24E8-2A61-473A-9FBC-FADA4688A513}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "banalg", "S:\workspaces\DCoTETools\banalg\banalg.csproj", "{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +108,18 @@ Global
 		{6EFB24E8-2A61-473A-9FBC-FADA4688A513}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{6EFB24E8-2A61-473A-9FBC-FADA4688A513}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{6EFB24E8-2A61-473A-9FBC-FADA4688A513}.Release|x86.ActiveCfg = Release|Any CPU
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|x86.ActiveCfg = Debug|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Debug|x86.Build.0 = Debug|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|Mixed Platforms.Build.0 = Release|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|x86.ActiveCfg = Release|x86
+		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
