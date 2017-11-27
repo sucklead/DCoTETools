@@ -10,17 +10,17 @@ namespace SucBatch
     {
         static void Main(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length < 3)
             {
                 Console.WriteLine("SucBatch by sucklead (http://dcotetools.sucklead.com/p/sucbatch.html)");
                 Console.WriteLine("To batch a single lst file into a batch file");
-                Console.WriteLine("SucBatch {binfiles directory} {input list filename} {output batchfile}");
+                Console.WriteLine("SucBatch {binfiles directory} {input list filename} {output batchfile} {no backups}");
                 Console.WriteLine("e.g. To build 01_house.lst into 01_house.bat with the bin files");
                 Console.WriteLine("from directory bin:");
                 Console.WriteLine("SucBatch bin 01_house.lst 01_house.bat");
                 Console.WriteLine();
                 Console.WriteLine("To batch all list files in a directory into matching bat files");
-                Console.WriteLine("SucBatch {binfiles directory} {file list directory} {output batchfile directory}");
+                Console.WriteLine("SucBatch {binfiles directory} {file list directory} {output batchfile directory} {no backups}");
                 Console.WriteLine("e.g. To build all .lst files in current directory into matching");
                 Console.WriteLine("bat files from directory bin:");
                 Console.WriteLine("SucBatch bin . .");
@@ -41,6 +41,12 @@ namespace SucBatch
 
                 batcher.BinFileDirectory = args[0];
 
+                bool noBackups = false;
+                if (args.Length == 4)
+                {
+                    noBackups = true;
+                }
+
                 //directory based?
                 if (Directory.Exists(args[1]))
                 {
@@ -53,6 +59,10 @@ namespace SucBatch
 
                     string listfilesDirectory = args[1];
                     string batchfilesDirectory = args[2];
+                    if (!Directory.Exists(batchfilesDirectory))
+                    {
+                        Directory.CreateDirectory(batchfilesDirectory);
+                    }
 
                     string[] lstFiles = Directory.GetFiles(listfilesDirectory, "*.lst");
 
@@ -68,7 +78,8 @@ namespace SucBatch
                         batcher.OutputFilename = Path.Combine(batchfilesDirectory, Path.GetFileNameWithoutExtension(file) + ".bat");
 
                         if (File.Exists(batcher.OutputFilename)
-                            && !File.Exists(batcher.OutputFilename + ".orig"))
+                            && !File.Exists(batcher.OutputFilename + ".orig")
+                            && !noBackups)
                         {
                             File.Copy(batcher.OutputFilename, batcher.OutputFilename + ".orig");
                         }
