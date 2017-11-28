@@ -87,6 +87,8 @@ namespace SucDecompiler
 
         List<GlobalStatementSyntax> globalStatements = new List<GlobalStatementSyntax>();
         Stack<BlockSyntax> blockStack = null;
+        Stack<DataIndex> stack = null;
+        //Stack<BlockSyntax> blockStack = null;
         int codePointer = 0;
         SyntaxToken semi = SyntaxFactory.Token(SyntaxFactory.TriviaList(), SyntaxKind.SemicolonToken, SyntaxFactory.TriviaList(SyntaxFactory.EndOfLine("\n")));
 
@@ -350,14 +352,15 @@ namespace SucDecompiler
         {
             //create new block stack
             blockStack = new Stack<BlockSyntax>();
-
-            codePointer = ParsedContent.OpCodeList.Count - 1;
-
+            stack = new Stack<DataIndex>();
+ 
+            //codePointer = ParsedContent.OpCodeList.Count - 1;
+            codePointer = 0;
             //add our base block to stack
             BlockSyntax block = SyntaxFactory.Block();
             blockStack.Push(block);
 
-            while (codePointer >= 0)
+            while (codePointer < ParsedContent.OpCodeList.Count)
             {
                 processOpCode();
             }
@@ -378,20 +381,71 @@ namespace SucDecompiler
             {
                 ProcessPrint();
             }
-            else
+            else if (operation.OpCode == OpCodeType.OP_FUNCTION)
             {
-                codePointer--;
+                ProcessFunction(codePointer);
             }
+            else if (operation.OpCode == OpCodeType.OP_PUSH)
+            {
+                stack.Push(operation.DataIndex);
+            }
+            else if (operation.OpCode == OpCodeType.OP_GETTOP)
+            {
+                //Console.WriteLine();
+            }
+            codePointer++;
+        }
+
+        private void ProcessFunction(int codePointer)
+        {
+            DataIndex function = stack.Pop();
+            string functionName = FunctionTable.Functions[function.Value];
+            ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName(functionName);
+            ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList();
+            List<ArgumentSyntax> arguments = new List<ArgumentSyntax>();
+
+            stack = new Stack<DataIndex>(stack);
+            while (stack.Count > 0)
+            {
+                DataIndex param = stack.Pop();
+                arguments.Add(SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(((string)GetCurrentValue(param.Value)).Replace("\"", "")))));
+            }
+            argumentList = argumentList.AddArguments(arguments.ToArray());
+
+            InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);
+
+            ExpressionStatementSyntax expressionStatement = SyntaxFactory.ExpressionStatement(invocationExpression, semi);
+
+            //are we assigning to a variable?
+            if (ParsedContent.OpCodeList[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+            {
+                var variableIdentifier = SyntaxFactory.IdentifierName(variables[ParsedContent.OpCodeList[codePointer + 1].DataIndex.Value].Name);
+                var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
+                //EqualsValueClauseSyntax equalsValueClause = SyntaxFactory.EqualsValueClause(expressionStatement);
+                //AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.IdentifierName, SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("stuff")), new SyntaxToken(), expressionStatement);
+                expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+            }
+            //else
+            //{
+            //    currentBlock = currentBlock.AddStatements(expressionStatement);
+            //}
+
+            //add to the current block
+            BlockSyntax currentBlock = blockStack.Pop();
+            currentBlock = currentBlock.AddStatements(expressionStatement);
+            blockStack.Push(currentBlock);
         }
 
         private void ProcessPrint()
         {
-            codePointer--;
-            Operation printParam = ParsedContent.OpCodeList[codePointer];
-            codePointer--;
+            DataIndex printParam = stack.Pop();
+//            codePointer--;
+  //          Operation printParam = ParsedContent.OpCodeList[codePointer];
+    //        codePointer++;
 
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName("Print");
-            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + GetCurrentValue(printParam.DataIndex.Value).ToString() + ")");
+            //ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + GetCurrentValue(printParam.DataIndex.Value).ToString() + ")");
+            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + GetCurrentValue(printParam.Value).ToString() + ")");
 
             InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);
 
@@ -429,6 +483,7 @@ namespace SucDecompiler
                 //processOpCode();
                 //create a body to host if content
             }
+            codePointer++;
         }
 
         private void ProcessIfBody()
