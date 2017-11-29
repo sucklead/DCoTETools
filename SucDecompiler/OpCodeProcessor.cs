@@ -19,11 +19,14 @@ namespace SucDecompiler
         private int totalOpCodes = 0;
         bool firstPrint = true;
         Stack<DataIndex> stack = null;
+        Stack<ExpressionSyntax> expressionStack = null;
+
         SyntaxToken semi = SyntaxFactory.Token(SyntaxFactory.TriviaList(), SyntaxKind.SemicolonToken, SyntaxFactory.TriviaList(SyntaxFactory.EndOfLine("\n")));
 
         public OpCodeProcessor()
         {
             stack = new Stack<DataIndex>();
+            expressionStack = new Stack<ExpressionSyntax>();
         }
 
         internal void ProcessOpCodes()
@@ -33,14 +36,18 @@ namespace SucDecompiler
             //parse the opcodes
             while (codePointer < totalOpCodes)
             {
-                processOperation(OpCodes[codePointer]);
+                ProcessOperation(OpCodes[codePointer]);
                 codePointer++;
             }
         }
 
-        private void processOperation(Operation operation)
+        private void ProcessOperation(Operation operation)
         {
-            if (operation.OpCode == OpCodeType.OP_JMP)
+            if (operation.OpCode == OpCodeType.OP_EQUAL)
+            {
+                ProcessEqual();
+            }
+            else if (operation.OpCode == OpCodeType.OP_JMP)
             {
                 ProcessJump();
             }
@@ -74,6 +81,21 @@ namespace SucDecompiler
             {
                 stack.Clear();
             }
+        }
+
+        private void ProcessEqual()
+        {
+            //get rhs
+            DataIndex rhsValue = stack.Pop();
+            var rhsVariableExpression = GetVariableExpression(rhsValue.Value);
+            //get lhs
+            DataIndex lhsValue = stack.Pop();
+            var lhsVariableExpression = GetVariableExpression(lhsValue.Value);
+
+            var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, lhsVariableExpression, rhsVariableExpression);
+
+            //push expression onto the stack
+            expressionStack.Push(binaryExpression);
         }
 
         private void AddVariablesToBlock()
@@ -229,7 +251,7 @@ namespace SucDecompiler
 
         private void ProcessJump()
         {
-
+            // TODO - could be a WHILE
             //current block is the if so we need to modify the if with a new block then set it as current
 
             BlockHelper.AddElseToIfBlock();
@@ -246,15 +268,22 @@ namespace SucDecompiler
 
         private void ProcessJumpF()
         {
-
-            //find variable that was pushed
-            DataIndex conditionVariable = stack.Pop();
-
+            ExpressionSyntax expressionSyntax = null;
+            //do we have an expression on the stack?
+            if (expressionStack.Count > 0)
+            {
+                expressionSyntax = expressionStack.Pop();
+            }
+            else
+            {
+                //find variable that was pushed
+                DataIndex conditionVariable = stack.Pop();
+                expressionSyntax = GetVariableExpression(conditionVariable.Value);
+            }
             // start a new block for the if
             BlockSyntax ifBlock = BlockHelper.CreateNewBlock("if");
 
             //add the if to the current block
-            ExpressionSyntax expressionSyntax = GetVariableExpression(conditionVariable.Value);
             IfStatementSyntax ifStatement = SyntaxFactory.IfStatement(expressionSyntax, ifBlock);
             BlockHelper.AddToCurrentBlock(ifStatement);
 
@@ -297,6 +326,11 @@ namespace SucDecompiler
                 {
                     int value = int.Parse(VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "").Replace(@"\", ""));
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Character")
+                {
+                    string value = (string)VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "");
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
                 }
                 else
                 {
