@@ -88,6 +88,7 @@ namespace SucDecompiler
 
         List<GlobalStatementSyntax> globalStatements = new List<GlobalStatementSyntax>();
         Stack<BlockSyntax> blockStack = null;
+        IfStatementSyntax currentIf = null;
         Stack<DataIndex> stack = null;
         //Stack<BlockSyntax> blockStack = null;
         int codePointer = 0;
@@ -386,18 +387,18 @@ namespace SucDecompiler
 
             if (operation.OpCode == OpCodeType.OP_JMP)
             {
-                //ProcessJumpTarget();
-                stack.Clear();
+                ProcessJump();
+                //stack.Clear();
             }
             if (operation.OpCode == OpCodeType.OP_JMPF)
             {
-                //ProcessJumpTarget();
-                stack.Clear();
+                ProcessJumpF();
+                //stack.Clear();
             }
             else if (operation.OpCode == OpCodeType.JUMPTARGET)
             {
-                //ProcessJumpTarget();
-                stack.Clear();
+                ProcessJumpTarget();
+                //stack.Clear();
             }
             else if (operation.OpCode == OpCodeType.OP_PRINT)
             {
@@ -582,38 +583,123 @@ namespace SucDecompiler
             //GlobalStatementSyntax globalStatement = Syntax.GlobalStatement(expressionStatement);
         }
 
-        private void ProcessJumpTarget()
+        private void ProcessJump()
         {
-            Operation jumpTargetOperation = ParsedContent.OpCodeList[codePointer];
-            //codePointer--;
+            // this is an else jump so create an else block
+            BlockSyntax elseBlock = SyntaxFactory.Block();
 
-            DataIndex jumpTarget = stack.Pop();
+            //get the current if block
+            BlockSyntax ifBlock = blockStack.Pop();
 
-            //look at where we came from if its OP_JMP then
-            Console.WriteLine("JUMPTARGET {0}", jumpTarget.Value);
+            //build the else clause with block
+            ElseClauseSyntax elseClause = SyntaxFactory.ElseClause(elseBlock);
+     
+            //add the else to the if
+            IfStatementSyntax ifStatement = currentIf;
+            ifStatement = ifStatement.WithElse(elseClause);
+            blockStack.Push(elseBlock);
+        }
 
-            var q = from opcode in ParsedContent.OpCodeList
-                    where opcode.Address == jumpTarget.Value
-                    select opcode;
-            Operation jumpSource = q.FirstOrDefault();
-            if (jumpSource.OpCode == OpCodeType.OP_JMP)
+        private void ProcessJumpF()
+        {
+
+            //find variable that was pushed
+            DataIndex conditionVariable = stack.Pop();
+            // start a new block
+            BlockSyntax ifBlock = SyntaxFactory.Block();
+            //            blockStack.Push(block);
+
+            //SyntaxToken operatorToken = null;
+            //if (falseCheck)
+            //{
+            //    operatorToken = SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken);
+            //}
+            //else
+            //{
+            //    operatorToken = SyntaxFactory.Token(SyntaxKind.EqualsEqualsToken);
+            //}
+
+            //BinaryExpressionSyntax binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.)
+
+
+            ExpressionSyntax expressionSyntax = null;
+            
+            //if not static condition is the variable itself
+            if (!variables[conditionVariable.Value].Static)
             {
-                //process as else
-                ProcessElseBody(jumpTargetOperation.DataIndex.Value);
-                //create a body to host else content
+                expressionSyntax = SyntaxFactory.IdentifierName(variables[conditionVariable.Value].Name);
             }
             else
             {
-                //process as an if
-                //processOpCode();
-                //create a body to host if content
+                var dataType = variables[conditionVariable.Value].DataType;
+
+                if (dataType == "String")
+                {
+                    string value = (string)GetCurrentValue(conditionVariable.Value).ToString().Replace("\"", "");
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Float")
+                {
+                    float value = float.Parse(GetCurrentValue(conditionVariable.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Int")
+                {
+                    int value = int.Parse(GetCurrentValue(conditionVariable.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else
+                {
+                    throw (new NotImplementedException());
+                }
             }
-            codePointer++;
+
+            IfStatementSyntax ifStatement = SyntaxFactory.IfStatement(expressionSyntax, ifBlock);
+
+            currentIf = ifStatement;
+
+            BlockSyntax currentBlock = blockStack.Pop();
+            currentBlock = currentBlock.AddStatements(ifStatement);
+            blockStack.Push(currentBlock);
+
+            //if block is new current block
+            blockStack.Push(ifBlock);
         }
 
-        private void ProcessIfBody()
+
+        private void ProcessJumpTarget()
         {
-            //throw new NotImplementedException();
+            //remove the last block
+            blockStack.Pop();
+            currentIf = null;
+
+            //need to update the current if or else with the block contents
+
+            //Operation jumpTargetOperation = ParsedContent.OpCodeList[codePointer];
+            ////codePointer--;
+
+            //DataIndex jumpTarget = stack.Pop();
+
+            ////look at where we came from if its OP_JMP then
+            //Console.WriteLine("JUMPTARGET {0}", jumpTarget.Value);
+
+            //var q = from opcode in ParsedContent.OpCodeList
+            //        where opcode.Address == jumpTarget.Value
+            //        select opcode;
+            //Operation jumpSource = q.FirstOrDefault();
+            //if (jumpSource.OpCode == OpCodeType.OP_JMP)
+            //{
+            //    //process as else
+            //    ProcessElseBody(jumpTargetOperation.DataIndex.Value);
+            //    //create a body to host else content
+            //}
+            //else
+            //{
+            //    //process as an if
+            //    //processOpCode();
+            //    //create a body to host if content
+            //}
+            //codePointer++;
         }
 
         private void ProcessElseBody(short jumptarget)
