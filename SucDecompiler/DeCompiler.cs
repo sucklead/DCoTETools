@@ -158,7 +158,7 @@ namespace SucDecompiler
             {
                 Directory.CreateDirectory(targetDir);
             }
-            File.WriteAllText(targetFilename, this.SourceCode);
+            File.WriteAllText(targetFilename, this.SourceCode.Replace(@"\\",@"\"));
         }
 
         private void BuildSource()
@@ -294,7 +294,7 @@ namespace SucDecompiler
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
             TypeSyntax stringType = SyntaxFactory.ParseTypeName("String ");
-            TypeSyntax floatType = SyntaxFactory.ParseTypeName("float ");
+            TypeSyntax floatType = SyntaxFactory.ParseTypeName("double ");
             TypeSyntax pointType = SyntaxFactory.ParseTypeName("Point ");
             TypeSyntax characterType = SyntaxFactory.ParseTypeName("Character ");
             TypeSyntax quartonianType = SyntaxFactory.ParseTypeName("Quartonian ");
@@ -373,9 +373,20 @@ namespace SucDecompiler
         {
             Operation operation = ParsedContent.OpCodeList[codePointer];
 
-            if (operation.OpCode == OpCodeType.JUMPTARGET)
+            if (operation.OpCode == OpCodeType.OP_JMP)
             {
-                ProcessJumpTarget();
+                //ProcessJumpTarget();
+                stack.Clear();
+            }
+            if (operation.OpCode == OpCodeType.OP_JMPF)
+            {
+                //ProcessJumpTarget();
+                stack.Clear();
+            }
+            else if (operation.OpCode == OpCodeType.JUMPTARGET)
+            {
+                //ProcessJumpTarget();
+                stack.Clear();
             }
             else if (operation.OpCode == OpCodeType.OP_PRINT)
             {
@@ -383,7 +394,7 @@ namespace SucDecompiler
             }
             else if (operation.OpCode == OpCodeType.OP_FUNCTION)
             {
-                ProcessFunction(codePointer);
+                ProcessFunction();
             }
             else if (operation.OpCode == OpCodeType.OP_PUSH)
             {
@@ -391,12 +402,66 @@ namespace SucDecompiler
             }
             else if (operation.OpCode == OpCodeType.OP_GETTOP)
             {
-                //Console.WriteLine();
+                // function return value handled in function
+                // so this is only for assigns
+                ProcessAssign();
+            }
+            else if (operation.OpCode == OpCodeType.OP_DISCARD)
+            {
+                stack.Clear();
             }
             codePointer++;
         }
 
-        private void ProcessFunction(int codePointer)
+        private void ProcessAssign()
+        {
+            DataIndex assignValue = stack.Pop();
+
+            var variableIdentifier = SyntaxFactory.IdentifierName(variables[ParsedContent.OpCodeList[codePointer].DataIndex.Value].Name);
+
+            AssignmentExpressionSyntax assignment = null;
+            if (!variables[assignValue.Value].Static)
+            {
+                var valueIdentifier = SyntaxFactory.IdentifierName(variables[assignValue.Value].Name);
+                assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, valueIdentifier);
+            }
+            else
+            {
+                string dataType = variables[assignValue.Value].DataType;
+
+                LiteralExpressionSyntax literalExpression = null;
+                if (dataType == "String")
+                {
+                    string value = (string)GetCurrentValue(assignValue.Value).ToString().Replace("\"", "");
+                    literalExpression = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Float")
+                {
+                    float value = float.Parse(GetCurrentValue(assignValue.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                    literalExpression = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Int")
+                {
+                    int value = int.Parse(GetCurrentValue(assignValue.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                    literalExpression = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else
+                {
+                    throw (new NotImplementedException());
+                }
+                assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, literalExpression);
+            }
+
+            //var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
+            var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+
+            //add to the current block
+            BlockSyntax currentBlock = blockStack.Pop();
+            currentBlock = currentBlock.AddStatements(expressionStatement);
+            blockStack.Push(currentBlock);
+        }
+
+        private void ProcessFunction()
         {
             DataIndex function = stack.Pop();
             string functionName = FunctionTable.Functions[function.Value];
@@ -408,7 +473,34 @@ namespace SucDecompiler
             while (stack.Count > 0)
             {
                 DataIndex param = stack.Pop();
-                arguments.Add(SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(((string)GetCurrentValue(param.Value)).Replace("\"", "")))));
+
+                if (!variables[param.Value].Static)
+                {
+                    //argument = variables[param.Value].Name;
+                    arguments.Add(SyntaxFactory.Argument(SyntaxFactory.IdentifierName(variables[param.Value].Name)));
+                }
+                else
+                {
+                    string dataType = variables[param.Value].DataType;
+                    
+                    if (dataType == "String")
+                    {
+                        string value = (string)GetCurrentValue(param.Value).ToString().Replace("\"", "");
+                        arguments.Add(SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value))));
+                    }
+                    else if(dataType == "Float")
+                    {
+                        float value = float.Parse(GetCurrentValue(param.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                        arguments.Add(SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value))));
+                    }
+                    else if (dataType == "Int")
+                    {
+                        int value = int.Parse(GetCurrentValue(param.Value).ToString().Replace("\"", "").Replace(@"\", ""));
+                        arguments.Add(SyntaxFactory.Argument(SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value))));
+                    }
+
+                }
+
             }
             argumentList = argumentList.AddArguments(arguments.ToArray());
 
@@ -421,14 +513,11 @@ namespace SucDecompiler
             {
                 var variableIdentifier = SyntaxFactory.IdentifierName(variables[ParsedContent.OpCodeList[codePointer + 1].DataIndex.Value].Name);
                 var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
-                //EqualsValueClauseSyntax equalsValueClause = SyntaxFactory.EqualsValueClause(expressionStatement);
-                //AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.IdentifierName, SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("stuff")), new SyntaxToken(), expressionStatement);
                 expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+
+                //make sure we move past the OP_GETTOP
+                codePointer++;
             }
-            //else
-            //{
-            //    currentBlock = currentBlock.AddStatements(expressionStatement);
-            //}
 
             //add to the current block
             BlockSyntax currentBlock = blockStack.Pop();
@@ -438,14 +527,28 @@ namespace SucDecompiler
 
         private void ProcessPrint()
         {
-            DataIndex printParam = stack.Pop();
-//            codePointer--;
-  //          Operation printParam = ParsedContent.OpCodeList[codePointer];
-    //        codePointer++;
+            DataIndex printParam = null;
+            string argument;
+            if (stack.Count > 0)
+            {
+                printParam = stack.Pop();
+
+                if (!variables[printParam.Value].Static)
+                {
+                    argument = variables[printParam.Value].Name;
+                }
+                else
+                {
+                    argument = GetCurrentValue(printParam.Value).ToString();
+                }
+            }
+            else
+            {
+                argument = "";
+            }
 
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName("Print");
-            //ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + GetCurrentValue(printParam.DataIndex.Value).ToString() + ")");
-            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + GetCurrentValue(printParam.Value).ToString() + ")");
+            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + argument + ")");
 
             InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);
 
@@ -461,20 +564,22 @@ namespace SucDecompiler
 
         private void ProcessJumpTarget()
         {
-            Operation jumpTarget = ParsedContent.OpCodeList[codePointer];
-            codePointer--;
+            Operation jumpTargetOperation = ParsedContent.OpCodeList[codePointer];
+            //codePointer--;
+
+            DataIndex jumpTarget = stack.Pop();
 
             //look at where we came from if its OP_JMP then
-            Console.WriteLine("JUMPTARGET {0}", jumpTarget.DataIndex.Value);
+            Console.WriteLine("JUMPTARGET {0}", jumpTarget.Value);
 
             var q = from opcode in ParsedContent.OpCodeList
-                    where opcode.Address == jumpTarget.DataIndex.Value
+                    where opcode.Address == jumpTarget.Value
                     select opcode;
             Operation jumpSource = q.FirstOrDefault();
             if (jumpSource.OpCode == OpCodeType.OP_JMP)
             {
                 //process as else
-                ProcessElseBody(jumpTarget.DataIndex.Value);
+                ProcessElseBody(jumpTargetOperation.DataIndex.Value);
                 //create a body to host else content
             }
             else

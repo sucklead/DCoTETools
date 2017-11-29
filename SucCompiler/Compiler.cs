@@ -373,7 +373,8 @@ namespace CocCompiler
                     }
                     else if (node.Kind() == SyntaxKind.NumericLiteralExpression)
                     {
-                        if (variable.Value is double)
+                        if (variable.Value is double
+                            || variable.Value is float)
                         {
                             variable.DataType = DataTypeType.Float;
                             if (node.Parent.Kind() == SyntaxKind.UnaryMinusExpression) // TODO - check this
@@ -962,15 +963,15 @@ namespace CocCompiler
                     || variable.DataType == DataTypeType.Point
                     || variable.DataType == DataTypeType.Quaternion)
                 {
-                    WriteInt32(binary, (Int16)variable.Reference);
+                    WriteInt32(binary, Convert.ToInt16(variable.Reference));
                 }
                 else if (variable.DataType == DataTypeType.Int)
                 {
-                    WriteInt32(binary, (Int32)variable.Value);
+                    WriteInt32(binary, Convert.ToInt32(variable.Value));
                 }
                 else if (variable.DataType == DataTypeType.Float)
                 {
-                    WriteFloat(binary, Convert.ToSingle((double)variable.Value));
+                    WriteFloat(binary, Convert.ToSingle(Convert.ToDouble(variable.Value)));
                 }
             }
         }
