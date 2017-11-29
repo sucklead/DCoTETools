@@ -582,3 +582,4 @@ D_FindGroundUnderPoint,306
 D_RegisterIoModule,450
 D_DeleteAllGlobalsPersistent,697
 GetActionableRange,108
+D_Unknown,436

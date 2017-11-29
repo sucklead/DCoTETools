@@ -27,12 +27,21 @@ namespace SucDecompiler
         {
             stack = new Stack<DataIndex>();
             expressionStack = new Stack<ExpressionSyntax>();
+            firstPrint = true;
         }
 
         internal void ProcessOpCodes()
         {
             totalOpCodes = OpCodes.Count;
             codePointer = 0;
+
+            if (totalOpCodes > 2
+                && OpCodes[1].OpCode != OpCodeType.OP_PRINT)
+            {
+                AddVariablesToBlock();
+                firstPrint = false;
+            }
+
             //parse the opcodes
             while (codePointer < totalOpCodes)
             {
@@ -85,6 +94,10 @@ namespace SucDecompiler
 
         private void ProcessEqual()
         {
+            if (stack.Count == 0)
+            {
+                return;
+            }
             //get rhs
             DataIndex rhsValue = stack.Pop();
             var rhsVariableExpression = GetVariableExpression(rhsValue.Value);
@@ -201,6 +214,19 @@ namespace SucDecompiler
                 //make sure we move past the OP_GETTOP
                 codePointer++;
             }
+            if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+            {
+                //TODO - this needs to work better for a = b = fn(c);
+
+                //add to the current block
+                BlockHelper.AddToCurrentBlock(expressionStatement);
+                var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
+                var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
+                expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+
+                //make sure we move past the OP_GETTOP
+                codePointer++;
+            }
 
             //add to the current block
             BlockHelper.AddToCurrentBlock(expressionStatement);
@@ -274,11 +300,15 @@ namespace SucDecompiler
             {
                 expressionSyntax = expressionStack.Pop();
             }
-            else
+            else if (stack.Count > 0)
             {
                 //find variable that was pushed
                 DataIndex conditionVariable = stack.Pop();
                 expressionSyntax = GetVariableExpression(conditionVariable.Value);
+            }
+            else
+            {
+                return; // TODO - fix these
             }
             // start a new block for the if
             BlockSyntax ifBlock = BlockHelper.CreateNewBlock("if");
@@ -328,6 +358,11 @@ namespace SucDecompiler
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
                 }
                 else if (dataType == "Character")
+                {
+                    string value = (string)VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "");
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                }
+                else if (dataType == "Point")
                 {
                     string value = (string)VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "");
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));

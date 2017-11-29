@@ -82,10 +82,21 @@ namespace SucDecompiler
             {
                 block = block.Parent as BlockSyntax;
             }
+
+            if (block == null)
+            {
+                CurrentBlock = null;
+                return null;
+            }
+
             CurrentBlock = block.GetAnnotations("Block").Single();
 
             return block;
         }
 
+        internal static BlockSyntax GetFirstBlock()
+        {
+            return Root.DescendantNodes().OfType<BlockSyntax>().First();
+        }
     }
 }

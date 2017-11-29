@@ -144,7 +144,7 @@ namespace SucDecompiler
             ParseOpCodes();
 
             //move first block contents to root
-            BlockSyntax block = BlockHelper.GetCurrentBlock();
+            BlockSyntax block = BlockHelper.GetFirstBlock();
             List<MemberDeclarationSyntax> globalStatements = new List<MemberDeclarationSyntax>();
             foreach (var statement in block.Statements)
             {

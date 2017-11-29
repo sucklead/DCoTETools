@@ -107,7 +107,7 @@ namespace CocCompiler
 
             Console.WriteLine("Compile complete.");
             //Console.WriteLine("\n\nPress <Enter> to exit..");
-            //Console.ReadLine();
+            Console.ReadLine();
         }
 
     }
