@@ -108,6 +108,7 @@ namespace SucDecompiler
 
         internal void DeCompileFile(string filename)
         {
+            filename = filename.Replace(".hfs", ".bin");
             string sourceFilename = Path.Combine(SourceDirectory, filename);
             string targetFilename = Path.Combine(TargetDirectory, filename.Replace(".bin", ".hfs"));
             string targetDir = Path.GetDirectoryName(targetFilename);

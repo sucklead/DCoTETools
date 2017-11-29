@@ -66,32 +66,33 @@ namespace SucDecompiler
         public static BlockSyntax GetPreviousBlock()
         {
             BlockSyntax block = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
+            BlockSyntax prevBlock = null;
 
             if (block.Parent is ElseClauseSyntax)
             {
                 ElseClauseSyntax elseStatement = block.Parent as ElseClauseSyntax;
                 IfStatementSyntax ifStatement = elseStatement.Parent as IfStatementSyntax;
-                block = ifStatement.Parent as BlockSyntax;
+                prevBlock = ifStatement.Parent as BlockSyntax;
             }
             else if (block.Parent is IfStatementSyntax)
             {
                 IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
-                block = ifStatement.Parent as BlockSyntax;
+                prevBlock = ifStatement.Parent as BlockSyntax;
             }
             else
             {
-                block = block.Parent as BlockSyntax;
+                prevBlock = block.Parent as BlockSyntax;
             }
 
-            if (block == null)
+            if (prevBlock == null)
             {
-                CurrentBlock = null;
-                return null;
+                //CurrentBlock = null;
+                return block;
             }
 
-            CurrentBlock = block.GetAnnotations("Block").Single();
+            CurrentBlock = prevBlock.GetAnnotations("Block").Single();
 
-            return block;
+            return prevBlock;
         }
 
         internal static BlockSyntax GetFirstBlock()

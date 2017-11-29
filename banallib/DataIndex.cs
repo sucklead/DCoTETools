@@ -9,5 +9,6 @@ namespace banallib
     {
         public Int16 Value { get; set; }
         public bool IsFunctionPointer { get; set; }
+        public bool IsNegative { get; set; }
     }
 }

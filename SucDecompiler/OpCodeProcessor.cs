@@ -56,6 +56,10 @@ namespace SucDecompiler
             {
                 ProcessEqual();
             }
+            else if (operation.OpCode == OpCodeType.OP_NOT_EQUAL)
+            {
+                ProcessNotEqual();
+            }
             else if (operation.OpCode == OpCodeType.OP_JMP)
             {
                 ProcessJump();
@@ -67,6 +71,10 @@ namespace SucDecompiler
             else if (operation.OpCode == OpCodeType.JUMPTARGET)
             {
                 ProcessJumpTarget();
+            }
+            else if (operation.OpCode == OpCodeType.OP_NEG)
+            {
+                ProcessNeg();
             }
             else if (operation.OpCode == OpCodeType.OP_PRINT)
             {
@@ -92,6 +100,32 @@ namespace SucDecompiler
             }
         }
 
+        private void ProcessNotEqual()
+        {
+            if (stack.Count == 0)
+            {
+                return;
+            }
+            //get rhs
+            DataIndex rhsValue = stack.Pop();
+            var rhsVariableExpression = GetVariableExpression(rhsValue);
+            //get lhs
+            DataIndex lhsValue = stack.Pop();
+            var lhsVariableExpression = GetVariableExpression(lhsValue);
+
+            var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, lhsVariableExpression, rhsVariableExpression);
+
+            //push expression onto the stack
+            expressionStack.Push(binaryExpression);
+        }
+
+        private void ProcessNeg()
+        {
+            DataIndex stackTop = stack.Pop();
+            stackTop.IsNegative = !stackTop.IsNegative;
+            stack.Push(stackTop);
+        }
+
         private void ProcessEqual()
         {
             if (stack.Count == 0)
@@ -100,10 +134,10 @@ namespace SucDecompiler
             }
             //get rhs
             DataIndex rhsValue = stack.Pop();
-            var rhsVariableExpression = GetVariableExpression(rhsValue.Value);
+            var rhsVariableExpression = GetVariableExpression(rhsValue);
             //get lhs
             DataIndex lhsValue = stack.Pop();
-            var lhsVariableExpression = GetVariableExpression(lhsValue.Value);
+            var lhsVariableExpression = GetVariableExpression(lhsValue);
 
             var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, lhsVariableExpression, rhsVariableExpression);
 
@@ -173,7 +207,7 @@ namespace SucDecompiler
             DataIndex assignValue = stack.Pop();
 
             var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer].DataIndex.Value].Name);
-            var variableExpression = GetVariableExpression(assignValue.Value);
+            var variableExpression = GetVariableExpression(assignValue);
 
             AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
 
@@ -196,7 +230,7 @@ namespace SucDecompiler
             {
                 DataIndex param = stack.Pop();
 
-                arguments.Add(SyntaxFactory.Argument(GetVariableExpression(param.Value)));
+                arguments.Add(SyntaxFactory.Argument(GetVariableExpression(param)));
             }
             argumentList = argumentList.AddArguments(arguments.ToArray());
 
@@ -304,7 +338,7 @@ namespace SucDecompiler
             {
                 //find variable that was pushed
                 DataIndex conditionVariable = stack.Pop();
-                expressionSyntax = GetVariableExpression(conditionVariable.Value);
+                expressionSyntax = GetVariableExpression(conditionVariable);
             }
             else
             {
@@ -330,8 +364,10 @@ namespace SucDecompiler
             }
         }
 
-        private ExpressionSyntax GetVariableExpression(short variable)
+        private ExpressionSyntax GetVariableExpression(DataIndex dataIndex)
         {
+            short variable = dataIndex.Value;
+
             ExpressionSyntax expressionSyntax = null;
             //if not static condition is the variable itself
             if (!VariableSet.Variables[variable].Static)
@@ -350,11 +386,19 @@ namespace SucDecompiler
                 else if (dataType == "Float")
                 {
                     float value = float.Parse(VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "").Replace(@"\", ""));
+                    if (dataIndex.IsNegative)
+                    {
+                        value = value * -1;
+                    }
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
                 }
                 else if (dataType == "Int")
                 {
                     int value = int.Parse(VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "").Replace(@"\", ""));
+                    if (dataIndex.IsNegative)
+                    {
+                        value = value * -1;
+                    }
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
                 }
                 else if (dataType == "Character")
