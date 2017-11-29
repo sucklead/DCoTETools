@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SucDecompiler", "SucDecompi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "banalg", "S:\workspaces\DCoTETools\banalg\banalg.csproj", "{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeTest", "TreeTest\TreeTest.csproj", "{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -120,6 +122,18 @@ Global
 		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|Mixed Platforms.Build.0 = Release|x86
 		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|x86.ActiveCfg = Release|x86
 		{7FC4561B-4E81-4B71-BDA4-02CB9D849CAA}.Release|x86.Build.0 = Release|x86
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Debug|x86.Build.0 = Debug|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|x86.ActiveCfg = Release|Any CPU
+		{A6AABDC8-27F9-4271-B585-0D980C6C5CF1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
