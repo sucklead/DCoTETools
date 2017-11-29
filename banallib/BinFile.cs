@@ -272,7 +272,14 @@ namespace banallib
                     }
                     else if (value.DataType == DataTypeType.Character)
                     {
-
+                        if (i == 0)
+                        {
+                            value.IsMe = true;
+                        }
+                        else if (i == 1)
+                        {
+                            value.IsPlayer = true;
+                        }
                         //print has one char reference
                         value.SubValues.Add((Int32)reader.ReadInt32());
                         reader.ReadByte(); //a zero here

@@ -12,6 +12,8 @@ namespace banallib
         public short Address { get; set; }
         public Int32 Reference { get; set; }
         public List<object> SubValues { get; set; }
+        public bool IsMe { get; set; }
+        public bool IsPlayer { get; set; }
 
         public Value()
         {

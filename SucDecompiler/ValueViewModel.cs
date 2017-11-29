@@ -37,5 +37,7 @@ namespace SucDecompiler
 
 
         public short AddressHexBase { get; set; }
+        public bool IsMe { get; internal set; }
+        public bool IsPlayer { get; internal set; }
     }
 }

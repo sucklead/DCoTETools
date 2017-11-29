@@ -16,5 +16,6 @@ namespace SucDecompiler
         public string DataType { get; set; }
         public string Name { get; set; }
         public bool Static { get; set; }
+        public bool Used { get; set; }
     }
 }

@@ -149,13 +149,14 @@ namespace SucDecompiler
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
             TypeSyntax stringType = SyntaxFactory.ParseTypeName("String ");
-            TypeSyntax floatType = SyntaxFactory.ParseTypeName("double ");
+            TypeSyntax floatType = SyntaxFactory.ParseTypeName("Float ");
             TypeSyntax pointType = SyntaxFactory.ParseTypeName("Point ");
             TypeSyntax characterType = SyntaxFactory.ParseTypeName("Character ");
             TypeSyntax quartonianType = SyntaxFactory.ParseTypeName("Quartonian ");
 
             var q = from variable in VariableSet.Variables
-                    where variable.Value.Static == false
+                    where (variable.Value.Static == false
+                           || variable.Value.Used == false)
                     orderby variable.Key
                     select variable;
             foreach (var variable in q)
@@ -404,7 +405,15 @@ namespace SucDecompiler
                 else if (dataType == "Character")
                 {
                     string value = (string)VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "");
-                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                    if (value == "Me"
+                        || value == "Player")
+                    {
+                        expressionSyntax = SyntaxFactory.IdentifierName(value);
+                    }
+                    else
+                    {
+                        expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                    }
                 }
                 else if (dataType == "Point")
                 {

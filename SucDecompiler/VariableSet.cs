@@ -26,7 +26,9 @@ namespace SucDecompiler
                     AddressHex = (short)(value.Address - parsedContent.BaseAddress + parsedContent.StartOfValues),
                     AddressHexBase = (short)(value.Address + parsedContent.StartOfValues),
                     DataType = value.DataType,
-                    Reference = value.Reference
+                    Reference = value.Reference,
+                    IsMe = value.IsMe,
+                    IsPlayer = value.IsPlayer
                 };
                 if (value.SubValues.Count > 0)
                 {
@@ -65,9 +67,17 @@ namespace SucDecompiler
                     Variable v = new Variable()
                     {
                         Address = value.Address,
-                        DataType = value.DataType.ToString()
+                        DataType = value.DataType.ToString(),
                         //Name = "var" + value.DataType.ToString() + value.Address.ToString()
                     };
+
+                    if (value.IsMe
+                        || value.IsPlayer)
+                    {
+                        v.Used = true;
+                        v.Static = true;
+                    }
+
                     switch (v.DataType)
                     {
                         case ("Int"):
@@ -96,7 +106,7 @@ namespace SucDecompiler
                 }
             }
 
-            //work out which variables are static
+            //work out which variables are static or unused
             for (int i = 0; i < parsedContent.OpCodeList.Count; i++)
             {
                 Operation operation = parsedContent.OpCodeList[i];
@@ -105,6 +115,14 @@ namespace SucDecompiler
                     if (Variables.ContainsKey(operation.DataIndex.Value))
                     {
                         Variables[operation.DataIndex.Value].Static = false;
+                        Variables[operation.DataIndex.Value].Used = true;
+                    }
+                }
+                else if (operation.OpCode == OpCodeType.OP_PUSH)
+                {
+                    if (Variables.ContainsKey(operation.DataIndex.Value))
+                    {
+                        Variables[operation.DataIndex.Value].Used = true;
                     }
                 }
             }
@@ -118,6 +136,18 @@ namespace SucDecompiler
             ValueViewModel vvm = q.FirstOrDefault();
 
             StringBuilder sb = new StringBuilder();
+
+            if (vvm.IsMe)
+            {
+                sb.Append("Me");
+                return sb.ToString();
+            }
+            else if (vvm.IsPlayer)
+            {
+                sb.Append("Player");
+                return sb.ToString();
+            }
+
             if (vvm.SubValue1 != null)
             {
                 sb.Append(GetSubValue(vvm, vvm.SubValue1));
