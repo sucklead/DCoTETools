@@ -1,0 +1,153 @@
+﻿<Window x:Class="banalg.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="709.825" Width="974.254"
+        xmlns:local="clr-namespace:banalg">
+    <Window.Resources>
+        <local:HexValueConverter x:Key="HexValueConverter" />
+        <local:DataIndexConverter x:Key="DataIndexConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="0"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Row="0" Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="filename" Text="{Binding Path=FileName, Mode=TwoWay}" />
+            <Button x:Name="btnLoadFile" Command="{Binding LoadFileCommand}" Grid.Column="1" Content="LoadFile" Padding="4"></Button>
+        </Grid>
+        <Grid Grid.Row="1" Grid.ColumnSpan="3">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <Label Content="BaseAddress" Width="Auto"/>
+                    <TextBox Text="{Binding BaseAddress, StringFormat={}{0:X4}}" HorizontalAlignment="Stretch"/>
+                    <Label Content="StartOfOpCodes" Width="Auto"/>
+                    <TextBox Text="{Binding ParsedContent.StartOfOpCodes, StringFormat={}{0:X4}}" HorizontalAlignment="Stretch"/>
+                    <Label Content="LengthOfOpCodes" Width="Auto"/>
+                    <TextBox Text="{Binding ParsedContent.LengthOfOpCodes, StringFormat={}{0:X4}}" HorizontalAlignment="Stretch"/>
+                    <Label Content="StartOfValues" Width="Auto"/>
+                    <TextBox Text="{Binding ParsedContent.StartOfValues, StringFormat={}{0:X4}}" HorizontalAlignment="Stretch"/>
+                    <Label Content="NumberOfValues" Width="Auto"/>
+                    <TextBox Text="{Binding ParsedContent.NumberOfValues, StringFormat={}{0:X4}}" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+        <GridSplitter Grid.Row="2"  Grid.Column="1" Grid.ColumnSpan="1" ResizeDirection="Columns" HorizontalAlignment="Center" VerticalAlignment="Stretch" Width="5"/>
+
+        <Grid Grid.Row="2" Grid.Column="0">
+            <ListView ItemsSource="{Binding ValueList}">
+                <ListView.View>
+                    <GridView>
+                        <!--<GridViewColumn Header="Address" DisplayMemberBinding="{Binding Path=Address}"/>-->
+                        <GridViewColumn Header="File Offset" DisplayMemberBinding="{Binding Path=AddressHex, StringFormat={}{0:X4}}"/>
+                        <GridViewColumn Header="Code Address" DisplayMemberBinding="{Binding Path=AddressHexBase, Converter={StaticResource HexValueConverter}}"/>
+                        <GridViewColumn Header="Data Type" DisplayMemberBinding="{Binding Path=DataType}"/>
+                        <GridViewColumn Header="Reference" DisplayMemberBinding="{Binding Path=Reference, Converter={StaticResource HexValueConverter}}"/>
+                        <GridViewColumn Header="SubValues[0]" DisplayMemberBinding="{Binding Path=SubValue1}"/>
+                        <GridViewColumn Header="SubValues[1]" DisplayMemberBinding="{Binding Path=SubValue2}"/>
+                        <GridViewColumn Header="SubValues[2]" DisplayMemberBinding="{Binding Path=SubValue3}"/>
+                        <GridViewColumn Header="SubValues[3]" DisplayMemberBinding="{Binding Path=SubValue4}"/>
+                        <GridViewColumn Header="SubValues[4]" DisplayMemberBinding="{Binding Path=SubValue5}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        <Grid Grid.Row="2"  Grid.Column="2">
+            <ListView ItemsSource="{Binding OpCodeList}">
+                <ListView.View>
+                    <GridView>
+                        <!--<GridViewColumn Header="Address" DisplayMemberBinding="{Binding Path=Address}"/>-->
+                        <GridViewColumn Header="File Offset" DisplayMemberBinding="{Binding Path=AddressHex, StringFormat={}{0:X4}}"/>
+                        <GridViewColumn Header="OpCode Hex" DisplayMemberBinding="{Binding Path=OpCodeHex}"/>
+                        <GridViewColumn Header="OpCode" DisplayMemberBinding="{Binding Path=OpCode}"/>
+                        <!-- <GridViewColumn Header="DataIndexValue" DisplayMemberBinding="{Binding Path=DataIndexValue, Converter={StaticResource DataIndexConverter}}"/> -->
+                        <GridViewColumn Header="Data Offset" DisplayMemberBinding="{Binding Path=DataIndexValueHex, Converter={StaticResource HexValueConverter}}"/>
+                        <GridViewColumn Header="Data Address" DisplayMemberBinding="{Binding Path=DataIndexValueBase, Converter={StaticResource HexValueConverter}}"/>
+                        <GridViewColumn Header="Function Name" DisplayMemberBinding="{Binding Path=FunctionPointerName}"/>
+                        <!--<GridViewColumn Header="DataIndexIsFunctionPointer" DisplayMemberBinding="{Binding Path=DataIndexIsFunctionPointer}"/>-->
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        <GridSplitter Grid.Row="3"  Grid.ColumnSpan="2" ResizeDirection="Rows" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5"/>
+            
+        <Grid Grid.Row="3"  Grid.ColumnSpan="3">
+            <ListView ItemsSource="{Binding ParsedOperationList}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Address" DisplayMemberBinding="{Binding Path=Address}"/>
+                        <GridViewColumn Header="OperationType" DisplayMemberBinding="{Binding Path=OperationType}"/>
+                        <GridViewColumn Header="ReturnValueTarget" DisplayMemberBinding="{Binding Path=ReturnValueTarget}"/>
+                        <GridViewColumn Header="Parameter1">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter1"/>
+                                    <Binding Path="Value1"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Parameter2">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter2"/>
+                                    <Binding Path="Value2"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Parameter3">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter3"/>
+                                    <Binding Path="Value3"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Parameter4">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter4"/>
+                                    <Binding Path="Value4"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Parameter5">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter5"/>
+                                    <Binding Path="Value5"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Parameter6">
+                            <GridViewColumn.DisplayMemberBinding>
+                                <MultiBinding StringFormat="[{0}] {1}">
+                                    <Binding Path="Parameter6"/>
+                                    <Binding Path="Value6"/>
+                                </MultiBinding>
+                            </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+
+        <ScrollViewer Grid.Row="4" Grid.ColumnSpan="3" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.VerticalScrollBarVisibility="Visible">
+            <TextBlock 
+                Text="{Binding SourceCode}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </ScrollViewer>
+        
+    </Grid>
+</Window>
