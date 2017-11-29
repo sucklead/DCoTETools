@@ -84,6 +84,7 @@ namespace SucDecompiler
 
         CSharpSyntaxTree tree = null;
         CompilationUnitSyntax root = null;
+        bool firstPrint = true;
 
         List<GlobalStatementSyntax> globalStatements = new List<GlobalStatementSyntax>();
         Stack<BlockSyntax> blockStack = null;
@@ -169,14 +170,15 @@ namespace SucDecompiler
             CSharpParseOptions cSharpParseOptions = new CSharpParseOptions(LanguageVersion.CSharp1, DocumentationMode.Parse, SourceCodeKind.Script);
             tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions) as CSharpSyntaxTree;
             root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
+            firstPrint = true;
 
             BuildVariables();
         
-            AddVariablesToRoot();
-
             ParseOpCodes();
 
             AddCodeToRoot();
+
+            //AddVariablesToRoot();
 
             this.SourceCode = root.GetText().ToString(); //.GetFullText().ToString();
         }
@@ -290,7 +292,7 @@ namespace SucDecompiler
             }
         }
 
-        private void AddVariablesToRoot()
+        private BlockSyntax AddVariablesToBlock(BlockSyntax block)
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
             TypeSyntax stringType = SyntaxFactory.ParseTypeName("String ");
@@ -298,6 +300,9 @@ namespace SucDecompiler
             TypeSyntax pointType = SyntaxFactory.ParseTypeName("Point ");
             TypeSyntax characterType = SyntaxFactory.ParseTypeName("Character ");
             TypeSyntax quartonianType = SyntaxFactory.ParseTypeName("Quartonian ");
+
+            //find insertion point after first print
+            //root.
 
             var q = from variable in variables
                     where variable.Value.Static == false
@@ -338,14 +343,21 @@ namespace SucDecompiler
                         break;
                 }
 
-                FieldDeclarationSyntax newField = SyntaxFactory.FieldDeclaration(
-                    new SyntaxList<AttributeListSyntax>(),
-                    new SyntaxTokenList(),
-                    SyntaxFactory.VariableDeclaration(type: theType, variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator)),
-                    semi);
+                //FieldDeclarationSyntax newField = SyntaxFactory.FieldDeclaration(
+                //    new SyntaxList<AttributeListSyntax>(),
+                //    new SyntaxTokenList(),
+                //    SyntaxFactory.VariableDeclaration(type: theType, variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator)),
+                //    semi);
 
-                root = root.WithMembers(root.Members.Add(newField));
+                VariableDeclarationSyntax variableDeclaration = SyntaxFactory.VariableDeclaration(type: theType, variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator));
+
+                SyntaxTokenList modifiers = new SyntaxTokenList();
+
+                LocalDeclarationStatementSyntax localDeclaration = SyntaxFactory.LocalDeclarationStatement(modifiers, variableDeclaration, semi);
+                block = block.AddStatements(localDeclaration);
             }
+
+            return block;
         }
 
         private void ParseOpCodes()
@@ -455,6 +467,8 @@ namespace SucDecompiler
             //var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
             var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
 
+            //expressionStatement
+
             //add to the current block
             BlockSyntax currentBlock = blockStack.Pop();
             currentBlock = currentBlock.AddStatements(expressionStatement);
@@ -557,6 +571,13 @@ namespace SucDecompiler
             //add to the current block
             BlockSyntax currentBlock = blockStack.Pop();
             currentBlock = currentBlock.AddStatements(expressionStatement);
+
+            if (firstPrint)
+            {
+                firstPrint = false;
+                currentBlock = AddVariablesToBlock(currentBlock); // = currentBlock.AddStatements(expressionStatement);
+            }
+
             blockStack.Push(currentBlock);
 
             //GlobalStatementSyntax globalStatement = Syntax.GlobalStatement(expressionStatement);
