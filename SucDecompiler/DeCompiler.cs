@@ -342,13 +342,7 @@ namespace SucDecompiler
                         theType = quartonianType;
                         break;
                 }
-
-                //FieldDeclarationSyntax newField = SyntaxFactory.FieldDeclaration(
-                //    new SyntaxList<AttributeListSyntax>(),
-                //    new SyntaxTokenList(),
-                //    SyntaxFactory.VariableDeclaration(type: theType, variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator)),
-                //    semi);
-
+                
                 VariableDeclarationSyntax variableDeclaration = SyntaxFactory.VariableDeclaration(type: theType, variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator));
 
                 SyntaxTokenList modifiers = new SyntaxTokenList();
@@ -377,8 +371,13 @@ namespace SucDecompiler
                 processOpCode();
             }
 
-            GlobalStatementSyntax globalStatement = SyntaxFactory.GlobalStatement(blockStack.Peek());
-            globalStatements.Add(globalStatement);
+            block = blockStack.Pop();
+
+            foreach (var statement in block.Statements)
+            {
+                GlobalStatementSyntax globalStatement = SyntaxFactory.GlobalStatement(statement);
+                globalStatements.Add(globalStatement);
+            }
         }
 
         private void processOpCode()
