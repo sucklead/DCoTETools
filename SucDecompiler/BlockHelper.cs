@@ -27,6 +27,35 @@ namespace SucDecompiler
             CurrentBlock = block.GetAnnotations("Block").Single();
         }
 
+        public static void AddElseToIfBlock()
+        {
+            //get current block
+            BlockSyntax block = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
+            if (!(block.Parent is IfStatementSyntax))
+            {
+                return;
+            }
+            SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Block", "else");
+            BlockSyntax elseBlock = SyntaxFactory.Block().WithAdditionalAnnotations(syntaxAnnotation);
+            ElseClauseSyntax elseClauseSyntax = SyntaxFactory.ElseClause(elseBlock);
+
+            //get if statement
+            IfStatementSyntax oldIfStatement = block.Parent as IfStatementSyntax;
+            //add an empty else block
+            IfStatementSyntax newIfStatement = oldIfStatement.WithElse(elseClauseSyntax);
+
+            //do the replacement
+            Root = Root.ReplaceNode(oldIfStatement, newIfStatement);
+
+            //the else block is now current
+            SetBlockAsCurrent(elseBlock);
+        }
+
+        public static BlockSyntax GetCurrentBlock()
+        {
+            return Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
+        }
+
         public static void AddToCurrentBlock(StatementSyntax newStatement)
         {
             BlockSyntax oldBlock = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
@@ -37,7 +66,14 @@ namespace SucDecompiler
         public static BlockSyntax GetPreviousBlock()
         {
             BlockSyntax block = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
-            if (block.Parent is IfStatementSyntax)
+
+            if (block.Parent is ElseClauseSyntax)
+            {
+                ElseClauseSyntax elseStatement = block.Parent as ElseClauseSyntax;
+                IfStatementSyntax ifStatement = elseStatement.Parent as IfStatementSyntax;
+                block = ifStatement.Parent as BlockSyntax;
+            }
+            else if (block.Parent is IfStatementSyntax)
             {
                 IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
                 block = ifStatement.Parent as BlockSyntax;

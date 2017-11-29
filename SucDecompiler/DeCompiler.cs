@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -142,11 +143,22 @@ namespace SucDecompiler
 
             ParseOpCodes();
 
-            //AddCodeToRoot();
+            //move first block contents to root
+            BlockSyntax block = BlockHelper.GetCurrentBlock();
+            List<MemberDeclarationSyntax> globalStatements = new List<MemberDeclarationSyntax>();
+            foreach (var statement in block.Statements)
+            {
+                GlobalStatementSyntax globalStatement = SyntaxFactory.GlobalStatement(statement);
+                globalStatements.Add(globalStatement);
+            }
 
-            //AddVariablesToRoot();
+            tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions) as CSharpSyntaxTree;
+            BlockHelper.Root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
+            BlockHelper.Root = BlockHelper.Root.AddMembers(globalStatements.ToArray());
 
-            this.SourceCode = BlockHelper.Root.GetText().ToString(); //.GetFullText().ToString();
+            SyntaxNode formatted = Formatter.Format(BlockHelper.Root, new AdhocWorkspace());
+            this.SourceCode = formatted.GetText().ToString();
+            //this.SourceCode = BlockHelper.Root.GetText().ToString(); //.GetFullText().ToString();
         }
 
 

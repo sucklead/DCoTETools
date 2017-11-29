@@ -229,30 +229,19 @@ namespace SucDecompiler
 
         private void ProcessJump()
         {
-            //go back to parent of if block
-            BlockHelper.GetPreviousBlock();
+
+            //current block is the if so we need to modify the if with a new block then set it as current
+
+            BlockHelper.AddElseToIfBlock();
 
             // start a new block for the else
-            BlockSyntax elseBlock = BlockHelper.CreateNewBlock("else");
+            //BlockSyntax elseBlock = BlockHelper.CreateNewBlock("else");
 
-            BlockHelper.AddToCurrentBlock(elseBlock);
+            //BlockHelper.AddToCurrentBlock(elseBlock);
 
             //current block is now the else
-            BlockHelper.SetBlockAsCurrent(elseBlock);
-
-            //////// this is an else jump so create an else block
-            //////BlockSyntax elseBlock = SyntaxFactory.Block();
-
-            ////////get the current if block
-            //////BlockSyntax ifBlock = blockStack.Pop();
-
-            ////////build the else clause with block
-            //////ElseClauseSyntax elseClause = SyntaxFactory.ElseClause(elseBlock);
-
-            ////////add the else to the if
-            //////IfStatementSyntax ifStatement = currentIf;
-            //////ifStatement = ifStatement.WithElse(elseClause);
-            //////blockStack.Push(elseBlock);
+            //BlockHelper.SetBlockAsCurrent(elseBlock);
+            
         }
 
         private void ProcessJumpF()
@@ -271,27 +260,6 @@ namespace SucDecompiler
 
             //current block is now the if
             BlockHelper.SetBlockAsCurrent(ifBlock);
-
-            //SyntaxToken operatorToken = null;
-            //if (falseCheck)
-            //{
-            //    operatorToken = SyntaxFactory.Token(SyntaxKind.ExclamationEqualsToken);
-            //}
-            //else
-            //{
-            //    operatorToken = SyntaxFactory.Token(SyntaxKind.EqualsEqualsToken);
-            //}
-
-            //BinaryExpressionSyntax binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.)
-
-            //////currentIf = ifStatement;
-
-            //////BlockSyntax currentBlock = blockStack.Pop();
-            //////currentBlock = currentBlock.AddStatements(ifStatement);
-            //////blockStack.Push(currentBlock);
-
-            ////////if block is new current block
-            //////blockStack.Push(ifBlock);
         }
 
         private void ProcessJumpTarget()
