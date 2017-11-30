@@ -30,6 +30,10 @@ class MyClass {
 
         if (nFakeShockTriggered == 0)
         {
+        }
+
+        if (nFakeShockTriggered == 0)
+        {
             // Stops the fake sound being played again
             D_SetGlobalInt("Global_nFakeShockTriggered", 1);
 

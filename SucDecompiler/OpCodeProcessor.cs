@@ -78,6 +78,10 @@ namespace SucDecompiler
             {
                 ProcessNeg();
             }
+            else if (operation.OpCode == OpCodeType.OP_NOT)
+            {
+                ProcessNot();
+            }
             else if (operation.OpCode == OpCodeType.OP_PRINT)
             {
                 ProcessPrint();
@@ -188,20 +192,14 @@ namespace SucDecompiler
                 syntaxKind = SyntaxKind.EqualsExpression;
             }
 
-            if (stack.Count == 0)
+            if (stack.Count == 0
+                && expressionStack.Count == 0)
             {
                 return;
             }
-            //get rhs
-            DataIndex rhsValue = stack.Pop();
-            var rhsVariableExpression = GetVariableExpression(rhsValue);
-            if (stack.Count == 0)
-            {
-                return;
-            }
-            //get lhs
-            DataIndex lhsValue = stack.Pop();
-            var lhsVariableExpression = GetVariableExpression(lhsValue);
+
+            var rhsVariableExpression = PopVariable();
+            var lhsVariableExpression = PopVariable();
 
             var binaryExpression = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
 
@@ -211,11 +209,23 @@ namespace SucDecompiler
 
         private void ProcessNeg()
         {
-            DataIndex stackTop = stack.Pop();
-            stackTop.IsNegative = !stackTop.IsNegative;
-            stack.Push(stackTop);
+            if (stack.Count > 0)
+            {
+                DataIndex stackTop = stack.Pop();
+                stackTop.IsNegative = !stackTop.IsNegative;
+                stack.Push(stackTop);
+            }
         }
-        
+
+        private void ProcessNot()
+        {
+            ExpressionSyntax variableExpression = PopVariable();
+
+            var notExpression = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, variableExpression);
+
+            expressionStack.Push(notExpression);
+        }
+
         private void AddVariablesToBlock()
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
@@ -273,22 +283,9 @@ namespace SucDecompiler
 
         private void ProcessAssign()
         {
-            ExpressionSyntax variableExpression = null;
-            //do we have an expression on the stack?
-            if (expressionStack.Count > 0)
-            {
-                variableExpression = expressionStack.Pop();
-            }
-            else if (stack.Count > 0)
-            {
-                //find variable that was pushed
-                DataIndex conditionVariable = stack.Peek();
-                variableExpression = GetVariableExpression(conditionVariable);
-            }
-            //DataIndex assignValue = stack.Peek();
+            ExpressionSyntax variableExpression = PopVariable();
 
             var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer].DataIndex.Value].Name);
-            //var variableExpression = GetVariableExpression(assignValue);
 
             AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
 
@@ -392,46 +389,28 @@ namespace SucDecompiler
 
         private void ProcessJump(Operation jumpOp)
         {
-            // TODO - could be a WHILE
-            //current block is the if so we need to modify the if with a new block then set it as current
+            //a jump back means this must be a while
             if (jumpOp.DataIndex.Value < jumpOp.Address)
             {
                 BlockHelper.ConvertIfToWhile();
             }
             else
             {
+                //current block is the if so we need to modify the if with a new block then set it as current
                 BlockHelper.AddElseToIfBlock();
             }
-            // start a new block for the else
-            //BlockSyntax elseBlock = BlockHelper.CreateNewBlock("else");
 
-                //BlockHelper.AddToCurrentBlock(elseBlock);
-
-                //current block is now the else
-                //BlockHelper.SetBlockAsCurrent(elseBlock);
-
-            }
+        }
 
         private void ProcessJumpF()
         {
-            ExpressionSyntax expressionSyntax = null;
-            //do we have an expression on the stack?
-            if (expressionStack.Count > 0)
+            ExpressionSyntax expressionSyntax = PopVariable();
+            if (expressionSyntax == null)
             {
-                expressionSyntax = expressionStack.Pop();
-            }
-            else if (stack.Count > 0)
-            {
-                //find variable that was pushed
-                DataIndex conditionVariable = stack.Pop();
-                expressionSyntax = GetVariableExpression(conditionVariable);
-            }
-            else
-            {
-                return; // TODO - fix these
+                return;
             }
             // start a new block for the if
-            BlockSyntax ifBlock = BlockHelper.CreateNewBlock("if");
+                BlockSyntax ifBlock = BlockHelper.CreateNewBlock("if");
 
             //add the if to the current block
             IfStatementSyntax ifStatement = SyntaxFactory.IfStatement(expressionSyntax, ifBlock);
