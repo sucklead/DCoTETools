@@ -78,27 +78,24 @@ namespace SucDecompiler
                         v.Static = true;
                     }
 
-                    switch (v.DataType)
+                    switch (v.DataType.ToLower())
                     {
-                        case ("Int"):
+                        case ("int"):
                             v.Name = "nVar" + v.Address.ToString();
                             break;
-                        case ("String"):
+                        case ("string"):
                             v.Name = "szVar" + v.Address.ToString();
                             break;
-                        case ("Point"):
+                        case ("point"):
                             v.Name = "ptVar" + v.Address.ToString();
                             break;
-                        case ("Character"):
+                        case ("character"):
                             v.Name = "cVar" + v.Address.ToString();
                             break;
-                        case ("Float"):
+                        case ("float"):
                             v.Name = "fVar" + v.Address.ToString();
                             break;
-                        case ("Quartnian"):
-                            v.Name = "qVar" + v.Address.ToString();
-                            break;
-                        case ("Quaternion"):
+                        case ("quaternion"):
                             v.Name = "qVar" + v.Address.ToString();
                             break;
                     }

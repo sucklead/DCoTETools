@@ -26,12 +26,14 @@ class MyClass {
 
         nFakeShockTriggered = D_GetGlobalInt("Global_nFakeShockTriggered");
 
+        nFakeShockTriggered = nFakeShockTriggered + 1;
+
         if (nFakeShockTriggered == 0)
         {
             // Stops the fake sound being played again
             D_SetGlobalInt("Global_nFakeShockTriggered", 1);
 
-            D_PlaySoundAmbient("Sound\SFX\06002.wav", 0.60, 1);
+            D_PlaySoundAmbient("Sound\\SFX\\\06002.wav", 0.60F, 1);
         }
     }
     // END OF NPC CODE +++++++++++++++++++++++++++++++++++++++++++++++++//

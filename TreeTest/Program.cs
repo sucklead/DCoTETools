@@ -51,6 +51,23 @@ namespace TreeTest
             AddToCurrentBlock(newBlock);
             currentBlock = syntaxAnnotation;
 
+
+            var variableIdentifier = SyntaxFactory.IdentifierName("vVar");
+            //var variableExpression = GetVariableExpression(assignValue);
+            int value = int.Parse("1");
+            var variableExpression = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+
+            var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, variableIdentifier, variableExpression);
+
+            //AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
+            AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, binaryExpression);
+
+            expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+
+            //add to the current block
+            AddToCurrentBlock(expressionStatement);
+
+
             AddVariables();
 
             //move back a block
@@ -59,9 +76,9 @@ namespace TreeTest
 
 
             //show source
-            block = root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(currentBlock)).Single();
-            Console.WriteLine("block source:");
-            Console.WriteLine(block.GetText());
+            //block = root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(currentBlock)).Single();
+            //Console.WriteLine("block source:");
+            //Console.WriteLine(block.GetText());
             Console.WriteLine("root source:");
             Console.WriteLine(root.GetText());
             Console.WriteLine("Complete.");

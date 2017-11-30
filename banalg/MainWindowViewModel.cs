@@ -740,7 +740,7 @@ namespace banalg
         //    TypeSyntax floatType = Syntax.ParseTypeName("float ");
         //    TypeSyntax pointType = Syntax.ParseTypeName("Point ");
         //    TypeSyntax characterType = Syntax.ParseTypeName("Character ");
-        //    TypeSyntax quartonianType = Syntax.ParseTypeName("Quartonian ");
+        //    TypeSyntax quaternionType = Syntax.ParseTypeName("Quaternion ");
         //    SyntaxToken semi = Syntax.Token(SyntaxKind.SemicolonToken, Syntax.EndOfLine("\n"));
 
         //    var q = from variable in variables
@@ -774,8 +774,8 @@ namespace banalg
         //            case ("Float"):
         //                theType = floatType;
         //                break;
-        //            case ("Quartonian"):
-        //                theType = quartonianType;
+        //            case ("Quaternion"):
+        //                theType = quaternionType;
         //                break;
         //        }
 
@@ -876,24 +876,24 @@ namespace banalg
                         DataType = value.DataType.ToString()
                         //Name = "var" + value.DataType.ToString() + value.Address.ToString()
                     };
-                    switch (v.DataType)
+                    switch (v.DataType.ToLower())
                     {
-                        case ("Int"):
+                        case ("int"):
                             v.Name = "nVar" + v.Address.ToString();
                             break;
-                        case ("String"):
+                        case ("string"):
                             v.Name = "szVar" + v.Address.ToString();
                             break;
-                        case ("Point"):
+                        case ("point"):
                             v.Name = "ptVar" + v.Address.ToString();
                             break;
-                        case ("Character"):
+                        case ("character"):
                             v.Name = "cVar" + v.Address.ToString();
                             break;
-                        case ("Float"):
+                        case ("float"):
                             v.Name = "fVar" + v.Address.ToString();
                             break;
-                        case ("Quartonian"):
+                        case ("quaternion"):
                             v.Name = "qVar" + v.Address.ToString();
                             break;
                     }

@@ -96,10 +96,60 @@ namespace SucDecompiler
                 // so this is only for assigns
                 ProcessAssign();
             }
+            else if (operation.OpCode == OpCodeType.OP_CONCAT)
+            {
+                ProcessConcat();
+            }
             else if (operation.OpCode == OpCodeType.OP_DISCARD)
             {
                 stack.Clear();
             }
+        }
+
+        private ExpressionSyntax PopVariable()
+        {
+            ExpressionSyntax variableExpression = null;
+            //do we have an expression on the stack?
+            if (expressionStack.Count > 0)
+            {
+                variableExpression = expressionStack.Pop();
+            }
+            else if (stack.Count > 0)
+            {
+                //find variable that was pushed
+                DataIndex conditionVariable = stack.Pop();
+                variableExpression = GetVariableExpression(conditionVariable);
+            }
+
+            return variableExpression;
+        }
+
+        private void ProcessConcat()
+        {
+            ExpressionSyntax lhsVariableExpression = PopVariable();
+            ExpressionSyntax rhsVariableExpression = PopVariable();
+            //get rhs
+            //ataIndex rhsValue = stack.Pop();
+            //var rhsVariableExpression = GetVariableExpression(rhsValue);
+            //get lhs
+            //DataIndex lhsValue = stack.Pop();
+            //var lhsVariableExpression = GetVariableExpression(lhsValue);
+
+            //SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, variableIdentifier, variableExpression);
+            ExpressionSyntax assignment;
+            if (lhsVariableExpression is IdentifierNameSyntax)
+            {
+                assignment = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, rhsVariableExpression, lhsVariableExpression);
+            }
+            else
+            {
+                assignment = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, lhsVariableExpression, rhsVariableExpression);
+            }
+            //var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+
+            //BlockHelper.AddToCurrentBlock(expressionStatement);
+
+            expressionStack.Push(assignment);
         }
 
         private void ProcessComparison(OpCodeType opCode)
@@ -137,6 +187,10 @@ namespace SucDecompiler
             //get rhs
             DataIndex rhsValue = stack.Pop();
             var rhsVariableExpression = GetVariableExpression(rhsValue);
+            if (stack.Count == 0)
+            {
+                return;
+            }
             //get lhs
             DataIndex lhsValue = stack.Pop();
             var lhsVariableExpression = GetVariableExpression(lhsValue);
@@ -153,26 +207,7 @@ namespace SucDecompiler
             stackTop.IsNegative = !stackTop.IsNegative;
             stack.Push(stackTop);
         }
-
-        //private void ProcessEqual()
-        //{
-        //    if (stack.Count == 0)
-        //    {
-        //        return;
-        //    }
-        //    //get rhs
-        //    DataIndex rhsValue = stack.Pop();
-        //    var rhsVariableExpression = GetVariableExpression(rhsValue);
-        //    //get lhs
-        //    DataIndex lhsValue = stack.Pop();
-        //    var lhsVariableExpression = GetVariableExpression(lhsValue);
-
-        //    var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, lhsVariableExpression, rhsVariableExpression);
-
-        //    //push expression onto the stack
-        //    expressionStack.Push(binaryExpression);
-        //}
-
+        
         private void AddVariablesToBlock()
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
@@ -180,7 +215,7 @@ namespace SucDecompiler
             TypeSyntax floatType = SyntaxFactory.ParseTypeName("Float ");
             TypeSyntax pointType = SyntaxFactory.ParseTypeName("Point ");
             TypeSyntax characterType = SyntaxFactory.ParseTypeName("Character ");
-            TypeSyntax quartonianType = SyntaxFactory.ParseTypeName("Quartonian ");
+            TypeSyntax quaternionType = SyntaxFactory.ParseTypeName("Quaternion ");
 
             var q = from variable in VariableSet.Variables
                     where (variable.Value.Static == false
@@ -197,28 +232,25 @@ namespace SucDecompiler
                 );
 
                 TypeSyntax theType = null;
-                switch (variable.Value.DataType)
+                switch (variable.Value.DataType.ToLower())
                 {
-                    case ("Int"):
+                    case ("int"):
                         theType = intType;
                         break;
-                    case ("String"):
+                    case ("string"):
                         theType = stringType;
                         break;
-                    case ("Point"):
+                    case ("point"):
                         theType = pointType;
                         break;
-                    case ("Character"):
+                    case ("character"):
                         theType = characterType;
                         break;
-                    case ("Float"):
+                    case ("float"):
                         theType = floatType;
                         break;
-                    case ("Quartonian"):
-                        theType = quartonianType;
-                        break;
-                    case ("Quaternion"):
-                        theType = quartonianType;
+                    case ("quaternion"):
+                        theType = quaternionType;
                         break;
                 }
 
@@ -233,10 +265,22 @@ namespace SucDecompiler
 
         private void ProcessAssign()
         {
-            DataIndex assignValue = stack.Peek();
+            ExpressionSyntax variableExpression = null;
+            //do we have an expression on the stack?
+            if (expressionStack.Count > 0)
+            {
+                variableExpression = expressionStack.Pop();
+            }
+            else if (stack.Count > 0)
+            {
+                //find variable that was pushed
+                DataIndex conditionVariable = stack.Peek();
+                variableExpression = GetVariableExpression(conditionVariable);
+            }
+            //DataIndex assignValue = stack.Peek();
 
             var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer].DataIndex.Value].Name);
-            var variableExpression = GetVariableExpression(assignValue);
+            //var variableExpression = GetVariableExpression(assignValue);
 
             AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
 

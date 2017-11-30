@@ -115,9 +115,6 @@ namespace SucDecompiler
             {
                 return;
             }
-            //SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Block", "else");
-            //BlockSyntax elseBlock = SyntaxFactory.Block().WithAdditionalAnnotations(syntaxAnnotation);
-            //ElseClauseSyntax elseClauseSyntax = SyntaxFactory.ElseClause(elseBlock);
 
             //get if statement
             IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
