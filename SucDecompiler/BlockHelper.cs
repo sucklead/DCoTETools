@@ -13,10 +13,12 @@ namespace SucDecompiler
     {
         public static CompilationUnitSyntax Root { get; set; }
         public static SyntaxAnnotation CurrentBlock { get; set; }
+        private static int lastBlockNumber = 0;
 
         public static BlockSyntax CreateNewBlock(string blockName)
         {
-            SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Block", blockName);
+            SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Block", lastBlockNumber.ToString());
+            lastBlockNumber++;
             BlockSyntax block = SyntaxFactory.Block().WithAdditionalAnnotations(syntaxAnnotation);
 
             return block;
@@ -68,16 +70,21 @@ namespace SucDecompiler
             BlockSyntax block = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
             BlockSyntax prevBlock = null;
 
-            if (block.Parent is ElseClauseSyntax)
+            if (block.Parent is ElseClauseSyntax elseStatement)
             {
-                ElseClauseSyntax elseStatement = block.Parent as ElseClauseSyntax;
+                //ElseClauseSyntax elseStatement = block.Parent as ElseClauseSyntax;
                 IfStatementSyntax ifStatement = elseStatement.Parent as IfStatementSyntax;
                 prevBlock = ifStatement.Parent as BlockSyntax;
             }
-            else if (block.Parent is IfStatementSyntax)
+            else if (block.Parent is IfStatementSyntax ifStatement)
             {
-                IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
+                //IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
                 prevBlock = ifStatement.Parent as BlockSyntax;
+            }
+            else if (block.Parent is WhileStatementSyntax whileStatement)
+            {
+                //IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
+                prevBlock = whileStatement.Parent as BlockSyntax;
             }
             else
             {
@@ -98,6 +105,30 @@ namespace SucDecompiler
         internal static BlockSyntax GetFirstBlock()
         {
             return Root.DescendantNodes().OfType<BlockSyntax>().First();
+        }
+
+        internal static void ConvertIfToWhile()
+        {
+            //get current block
+            BlockSyntax block = Root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(CurrentBlock)).Single();
+            if (!(block.Parent is IfStatementSyntax))
+            {
+                return;
+            }
+            //SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Block", "else");
+            //BlockSyntax elseBlock = SyntaxFactory.Block().WithAdditionalAnnotations(syntaxAnnotation);
+            //ElseClauseSyntax elseClauseSyntax = SyntaxFactory.ElseClause(elseBlock);
+
+            //get if statement
+            IfStatementSyntax ifStatement = block.Parent as IfStatementSyntax;
+            //change it to a while
+            WhileStatementSyntax whileStatement = SyntaxFactory.WhileStatement(ifStatement.Condition, ifStatement.Statement);
+
+            //do the replacement
+            Root = Root.ReplaceNode(ifStatement, whileStatement);
+
+            BlockSyntax prevBlock = GetPreviousBlock();
+            CurrentBlock = prevBlock.GetAnnotations("Block").Single();
         }
     }
 }

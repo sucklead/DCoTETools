@@ -52,17 +52,19 @@ namespace SucDecompiler
 
         private void ProcessOperation(Operation operation)
         {
-            if (operation.OpCode == OpCodeType.OP_EQUAL)
+            if (operation.OpCode == OpCodeType.OP_NOT_EQUAL
+                || operation.OpCode == OpCodeType.OP_EQUAL
+                || operation.OpCode == OpCodeType.OP_MORE_THAN
+                || operation.OpCode == OpCodeType.OP_MORE_THAN_OR_EQUAL
+                || operation.OpCode == OpCodeType.OP_LESS_THAN
+                || operation.OpCode == OpCodeType.OP_LESS_THAN_OR_EQUAL
+                )
             {
-                ProcessEqual();
-            }
-            else if (operation.OpCode == OpCodeType.OP_NOT_EQUAL)
-            {
-                ProcessNotEqual();
+                ProcessComparison(operation.OpCode);
             }
             else if (operation.OpCode == OpCodeType.OP_JMP)
             {
-                ProcessJump();
+                ProcessJump(operation);
             }
             else if (operation.OpCode == OpCodeType.OP_JMPF)
             {
@@ -100,8 +102,34 @@ namespace SucDecompiler
             }
         }
 
-        private void ProcessNotEqual()
+        private void ProcessComparison(OpCodeType opCode)
         {
+            SyntaxKind syntaxKind;
+            if (opCode == OpCodeType.OP_NOT_EQUAL)
+            {
+                syntaxKind = SyntaxKind.NotEqualsExpression;
+            }
+            else if (opCode == OpCodeType.OP_MORE_THAN)
+            {
+                syntaxKind = SyntaxKind.GreaterThanExpression;
+            }
+            else if (opCode == OpCodeType.OP_MORE_THAN_OR_EQUAL)
+            {
+                syntaxKind = SyntaxKind.GreaterThanOrEqualExpression;
+            }
+            else if (opCode == OpCodeType.OP_LESS_THAN)
+            {
+                syntaxKind = SyntaxKind.LessThanExpression;
+            }
+            else if (opCode == OpCodeType.OP_LESS_THAN_OR_EQUAL)
+            {
+                syntaxKind = SyntaxKind.LessThanOrEqualExpression;
+            }
+            else
+            {
+                syntaxKind = SyntaxKind.EqualsExpression;
+            }
+
             if (stack.Count == 0)
             {
                 return;
@@ -113,7 +141,7 @@ namespace SucDecompiler
             DataIndex lhsValue = stack.Pop();
             var lhsVariableExpression = GetVariableExpression(lhsValue);
 
-            var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.NotEqualsExpression, lhsVariableExpression, rhsVariableExpression);
+            var binaryExpression = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
 
             //push expression onto the stack
             expressionStack.Push(binaryExpression);
@@ -126,24 +154,24 @@ namespace SucDecompiler
             stack.Push(stackTop);
         }
 
-        private void ProcessEqual()
-        {
-            if (stack.Count == 0)
-            {
-                return;
-            }
-            //get rhs
-            DataIndex rhsValue = stack.Pop();
-            var rhsVariableExpression = GetVariableExpression(rhsValue);
-            //get lhs
-            DataIndex lhsValue = stack.Pop();
-            var lhsVariableExpression = GetVariableExpression(lhsValue);
+        //private void ProcessEqual()
+        //{
+        //    if (stack.Count == 0)
+        //    {
+        //        return;
+        //    }
+        //    //get rhs
+        //    DataIndex rhsValue = stack.Pop();
+        //    var rhsVariableExpression = GetVariableExpression(rhsValue);
+        //    //get lhs
+        //    DataIndex lhsValue = stack.Pop();
+        //    var lhsVariableExpression = GetVariableExpression(lhsValue);
 
-            var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, lhsVariableExpression, rhsVariableExpression);
+        //    var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, lhsVariableExpression, rhsVariableExpression);
 
-            //push expression onto the stack
-            expressionStack.Push(binaryExpression);
-        }
+        //    //push expression onto the stack
+        //    expressionStack.Push(binaryExpression);
+        //}
 
         private void AddVariablesToBlock()
         {
@@ -205,7 +233,7 @@ namespace SucDecompiler
 
         private void ProcessAssign()
         {
-            DataIndex assignValue = stack.Pop();
+            DataIndex assignValue = stack.Peek();
 
             var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer].DataIndex.Value].Name);
             var variableExpression = GetVariableExpression(assignValue);
@@ -310,22 +338,27 @@ namespace SucDecompiler
             //GlobalStatementSyntax globalStatement = Syntax.GlobalStatement(expressionStatement);
         }
 
-        private void ProcessJump()
+        private void ProcessJump(Operation jumpOp)
         {
             // TODO - could be a WHILE
             //current block is the if so we need to modify the if with a new block then set it as current
-
-            BlockHelper.AddElseToIfBlock();
-
+            if (jumpOp.DataIndex.Value < jumpOp.Address)
+            {
+                BlockHelper.ConvertIfToWhile();
+            }
+            else
+            {
+                BlockHelper.AddElseToIfBlock();
+            }
             // start a new block for the else
             //BlockSyntax elseBlock = BlockHelper.CreateNewBlock("else");
 
-            //BlockHelper.AddToCurrentBlock(elseBlock);
+                //BlockHelper.AddToCurrentBlock(elseBlock);
 
-            //current block is now the else
-            //BlockHelper.SetBlockAsCurrent(elseBlock);
-            
-        }
+                //current block is now the else
+                //BlockHelper.SetBlockAsCurrent(elseBlock);
+
+            }
 
         private void ProcessJumpF()
         {
