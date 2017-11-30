@@ -16,7 +16,18 @@ namespace SucDecompiler
 
             if (args.Length < 2)
             {
-                Console.WriteLine("SucDeCompiler by sucklead (http://dcotetools.sucklead.com/p/sucdecompiler.html)");
+                Console.WriteLine("SucDecompiler by sucklead (http://dcotetools.sucklead.com/p/sucdecompiler.html)");
+                Console.WriteLine("To decompile a single file");
+                Console.WriteLine("SucDecompiler {binary directory} {target directory} {binary filename}");
+                Console.WriteLine(@"e.g. To decompile bin\gamescripts\01_house\$debug\debugblack.bin into directory src");
+                Console.WriteLine("from the directory below bin:");
+                Console.WriteLine(@"SucDecompiler bin src gamescripts\01_house\$debug\debugblack.hfs");
+                Console.WriteLine();
+                Console.WriteLine("To decompile all files in a directory");
+                Console.WriteLine("SucDecompiler {binary directory} {target directory}");
+                Console.WriteLine("e.g. to decompile everything in bin to src");
+                Console.WriteLine("from the directory below bin:");
+                Console.WriteLine("SucDecompiler bin src");
                 return;
             }
 
@@ -24,9 +35,9 @@ namespace SucDecompiler
             source = args[0];
             target = args[1];
 
-            Console.WriteLine("SucDeCompiler by sucklead invoked at {0}", DateTime.Now);
-            Console.WriteLine("Source -> {0}", source);
-            Console.WriteLine("Target -> {0}", target);
+            Console.WriteLine("SucDecompiler by sucklead invoked at {0}", DateTime.Now);
+            Console.WriteLine("Binaries -> {0}", source);
+            Console.WriteLine("Target Source -> {0}", target);
             
             //FunctionTable.LoadData();
 
@@ -52,7 +63,7 @@ namespace SucDecompiler
                     }
                     else
                     {
-                        Console.WriteLine("Error, DeCompile target {0} does not exist", Path.Combine(source, filename));
+                        Console.WriteLine("Error, Decompile target {0} does not exist", Path.Combine(source, filename));
                         //Console.ReadLine();
                         return;
                     }
@@ -67,7 +78,7 @@ namespace SucDecompiler
                 }
                 else
                 {
-                    Console.WriteLine("Error, Compile source {0} does not exist", source);
+                    Console.WriteLine("Error, Decompile source {0} does not exist", source);
                     //Console.ReadLine();
                     return;
                 }
@@ -75,7 +86,7 @@ namespace SucDecompiler
             //save function table if anything has changed
             //FunctionTable.SaveData();
 
-            Console.WriteLine("DeCompile complete.");
+            Console.WriteLine("Decompile complete.");
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
         }
