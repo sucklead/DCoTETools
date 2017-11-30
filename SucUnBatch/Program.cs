@@ -45,6 +45,16 @@ namespace UnBatch
                     }
                 }
 
+                if (!Directory.Exists(cutter.FileListDirectory))
+                {
+                    Directory.CreateDirectory(cutter.FileListDirectory);
+                    if (!Directory.Exists(cutter.FileListDirectory))
+                    {
+                        Console.WriteLine("Couldn't create list directory");
+                        return;
+                    }
+                }
+
                 //compile a directory
                 if (Directory.Exists(batfile))
                 {
