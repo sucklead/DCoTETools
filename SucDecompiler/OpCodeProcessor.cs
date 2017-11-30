@@ -108,6 +108,14 @@ namespace SucDecompiler
             {
                 ProcessBinary(operation.OpCode);
             }
+            else if (operation.OpCode == OpCodeType.OP_DIVIDE)
+            {
+                ProcessBinary(operation.OpCode);
+            }
+            else if (operation.OpCode == OpCodeType.OP_MULTIPLY)
+            {
+                ProcessBinary(operation.OpCode);
+            }
             else if (operation.OpCode == OpCodeType.OP_DISCARD)
             {
                 stack.Clear();
@@ -134,8 +142,8 @@ namespace SucDecompiler
 
         private void ProcessBinary(OpCodeType opCode)
         {
-            ExpressionSyntax lhsVariableExpression = PopVariable();
             ExpressionSyntax rhsVariableExpression = PopVariable();
+            ExpressionSyntax lhsVariableExpression = PopVariable();
 
             SyntaxKind syntaxKind;
             if (opCode == OpCodeType.OP_CONCAT)
@@ -146,20 +154,28 @@ namespace SucDecompiler
             {
                 syntaxKind = SyntaxKind.SubtractExpression;
             }
+            else if (opCode == OpCodeType.OP_DIVIDE)
+            {
+                syntaxKind = SyntaxKind.DivideExpression;
+            }
+            else if (opCode == OpCodeType.OP_MULTIPLY)
+            {
+                syntaxKind = SyntaxKind.MultiplyExpression;
+            }
             else
             {
                 throw new Exception();
             }
 
             ExpressionSyntax assignment;
-            if (lhsVariableExpression is IdentifierNameSyntax)
-            {
+            //if (lhsVariableExpression is IdentifierNameSyntax)
+           // {
                 assignment = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
-            }
-            else
-            {
-                assignment = SyntaxFactory.BinaryExpression(syntaxKind, rhsVariableExpression, lhsVariableExpression);
-            }
+            //}
+            //else
+            //{
+            //    assignment = SyntaxFactory.BinaryExpression(syntaxKind, rhsVariableExpression, lhsVariableExpression);
+            //}
 
             expressionStack.Push(assignment);
         }

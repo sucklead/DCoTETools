@@ -40,6 +40,7 @@ namespace SucDecompiler
                 for (int a = 2; a < args.Length; a++)
                 {
                     filename = args[a];
+                    filename = filename.Replace(".hfs",".bin");
                     if (filename.StartsWith(source))
                     {
                         filename = filename.Substring(target.Length + 1);
