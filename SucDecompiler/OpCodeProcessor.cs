@@ -98,7 +98,11 @@ namespace SucDecompiler
             }
             else if (operation.OpCode == OpCodeType.OP_CONCAT)
             {
-                ProcessConcat();
+                ProcessBinary(operation.OpCode);
+            }
+            else if (operation.OpCode == OpCodeType.OP_MINUS)
+            {
+                ProcessBinary(operation.OpCode);
             }
             else if (operation.OpCode == OpCodeType.OP_DISCARD)
             {
@@ -124,30 +128,34 @@ namespace SucDecompiler
             return variableExpression;
         }
 
-        private void ProcessConcat()
+        private void ProcessBinary(OpCodeType opCode)
         {
             ExpressionSyntax lhsVariableExpression = PopVariable();
             ExpressionSyntax rhsVariableExpression = PopVariable();
-            //get rhs
-            //ataIndex rhsValue = stack.Pop();
-            //var rhsVariableExpression = GetVariableExpression(rhsValue);
-            //get lhs
-            //DataIndex lhsValue = stack.Pop();
-            //var lhsVariableExpression = GetVariableExpression(lhsValue);
 
-            //SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, variableIdentifier, variableExpression);
-            ExpressionSyntax assignment;
-            if (lhsVariableExpression is IdentifierNameSyntax)
+            SyntaxKind syntaxKind;
+            if (opCode == OpCodeType.OP_CONCAT)
             {
-                assignment = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, rhsVariableExpression, lhsVariableExpression);
+                syntaxKind = SyntaxKind.AddExpression;
+            }
+            else if (opCode == OpCodeType.OP_MINUS)
+            {
+                syntaxKind = SyntaxKind.SubtractExpression;
             }
             else
             {
-                assignment = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression, lhsVariableExpression, rhsVariableExpression);
+                throw new Exception();
             }
-            //var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
 
-            //BlockHelper.AddToCurrentBlock(expressionStatement);
+            ExpressionSyntax assignment;
+            if (lhsVariableExpression is IdentifierNameSyntax)
+            {
+                assignment = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
+            }
+            else
+            {
+                assignment = SyntaxFactory.BinaryExpression(syntaxKind, rhsVariableExpression, lhsVariableExpression);
+            }
 
             expressionStack.Push(assignment);
         }
