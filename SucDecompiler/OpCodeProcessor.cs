@@ -319,12 +319,16 @@ namespace SucDecompiler
             ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList();
             List<ArgumentSyntax> arguments = new List<ArgumentSyntax>();
 
+            //reverse the stacks
             stack = new Stack<DataIndex>(stack);
-            while (stack.Count > 0)
+            expressionStack = new Stack<ExpressionSyntax>(expressionStack);
+            while (stack.Count > 0
+                   || expressionStack.Count > 0)
             {
-                DataIndex param = stack.Pop();
-
-                arguments.Add(SyntaxFactory.Argument(GetVariableExpression(param)));
+                ExpressionSyntax paramSyntax = PopVariable();
+                //                DataIndex param = stack.Pop();
+                //                arguments.Add(SyntaxFactory.Argument(GetVariableExpression(param)));
+                arguments.Add(SyntaxFactory.Argument(paramSyntax));
             }
             argumentList = argumentList.AddArguments(arguments.ToArray());
 
@@ -438,11 +442,15 @@ namespace SucDecompiler
 
         private void ProcessJumpTarget()
         {
-            //if previous opcode was an else then don't step back a block
-            if (OpCodes[codePointer - 1].OpCode != OpCodeType.OP_JMP)
+            var previousOperation = OpCodes[codePointer - 1];
+            //if previous opcode was a jump out of an if
+            if (previousOperation.OpCode == OpCodeType.OP_JMP
+                && previousOperation.DataIndex.Value > previousOperation.Address)
             {
-                BlockHelper.GetPreviousBlock();
+                return;
             }
+
+            BlockHelper.GetPreviousBlock();
         }
 
         private ExpressionSyntax GetVariableExpression(DataIndex dataIndex)
