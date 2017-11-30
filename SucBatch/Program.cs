@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Reflection;
 
 namespace SucBatch
 {
@@ -13,6 +14,8 @@ namespace SucBatch
             if (args.Length < 3)
             {
                 Console.WriteLine("SucBatch by sucklead (http://dcotetools.sucklead.com/p/sucbatch.html)");
+                Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
+                Console.WriteLine();
                 Console.WriteLine("To batch a single lst file into a batch file");
                 Console.WriteLine("SucBatch {binfiles directory} {input list filename} {output batchfile} {no backups}");
                 Console.WriteLine("e.g. To build 01_house.lst into 01_house.bat with the bin files");
@@ -24,8 +27,14 @@ namespace SucBatch
                 Console.WriteLine("e.g. To build all .lst files in current directory into matching");
                 Console.WriteLine("bat files from directory bin:");
                 Console.WriteLine("SucBatch bin . .");
+                Console.WriteLine();
+                Console.WriteLine("Easiest way to run it is from within the Scripts directory:");
+                Console.WriteLine("SucBatch newbin list newbat");
                 return;
             }
+
+            Console.WriteLine("SucBatch by sucklead started at {0}", DateTime.Now);
+            Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
 
             try
             {
@@ -134,6 +143,8 @@ namespace SucBatch
                 Console.WriteLine("Error encountered batching scripts:");
                 Console.WriteLine(ex.ToString());
             }
+
+            Console.WriteLine("Batch completed at {0}.", DateTime.Now);
         }
     }
 }

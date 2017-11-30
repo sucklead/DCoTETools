@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace SucDecompiler
@@ -17,6 +18,8 @@ namespace SucDecompiler
             if (args.Length < 2)
             {
                 Console.WriteLine("SucDecompiler by sucklead (http://dcotetools.sucklead.com/p/sucdecompiler.html)");
+                Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
+                Console.WriteLine();
                 Console.WriteLine("To decompile a single file");
                 Console.WriteLine("SucDecompiler {binary directory} {target directory} {binary filename}");
                 Console.WriteLine(@"e.g. To decompile bin\gamescripts\01_house\$debug\debugblack.bin into directory src");
@@ -28,6 +31,9 @@ namespace SucDecompiler
                 Console.WriteLine("e.g. to decompile everything in bin to src");
                 Console.WriteLine("from the directory below bin:");
                 Console.WriteLine("SucDecompiler bin src");
+                Console.WriteLine();
+                Console.WriteLine("Easiest way to run it is from within the Scripts directory:");
+                Console.WriteLine("SucDecompiler bin src");
                 return;
             }
 
@@ -35,7 +41,8 @@ namespace SucDecompiler
             source = args[0];
             target = args[1];
 
-            Console.WriteLine("SucDecompiler by sucklead invoked at {0}", DateTime.Now);
+            Console.WriteLine("SucDecompiler by sucklead started at {0}", DateTime.Now);
+            Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Binaries -> {0}", source);
             Console.WriteLine("Target Source -> {0}", target);
             
@@ -86,7 +93,7 @@ namespace SucDecompiler
             //save function table if anything has changed
             //FunctionTable.SaveData();
 
-            Console.WriteLine("Decompile complete.");
+            Console.WriteLine("Decompile completed at {0}.", DateTime.Now);
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
         }

@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Reflection;
 
 namespace CocCompiler
 {
@@ -20,6 +21,8 @@ namespace CocCompiler
             if (args.Length < 2)
             {
                 Console.WriteLine("SucCompiler by sucklead (http://dcotetools.sucklead.com/p/succompiler.html)");
+                Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
+                Console.WriteLine();
                 Console.WriteLine("To compile a single file");
                 Console.WriteLine("SucCompiler {source directory} {binary directory} {source filename}");
                 Console.WriteLine(@"e.g. To compile src\gamescripts\01_house\$debug\debugblack.hfs into directory bin");
@@ -31,6 +34,9 @@ namespace CocCompiler
                 Console.WriteLine("e.g. to compile everything in src to bin");
                 Console.WriteLine("from directory scripts:");
                 Console.WriteLine("SucCompiler src bin");
+                Console.WriteLine();
+                Console.WriteLine("Easiest way to run it is from within the Scripts directory:");
+                Console.WriteLine("SucCompiler src newbin");
                 return;
             }
 
@@ -38,7 +44,8 @@ namespace CocCompiler
             source = args[0];
             target = args[1];
 
-            Console.WriteLine("SucCompiler by sucklead invoked at {0}", DateTime.Now);
+            Console.WriteLine("SucCompiler by sucklead started at {0}", DateTime.Now);
+            Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Source -> {0}", source);
             Console.WriteLine("Target -> {0}", target); 
 
@@ -105,7 +112,7 @@ namespace CocCompiler
             //save function table if anything has changed
             FunctionTable.SaveData();
 
-            Console.WriteLine("Compile complete.");
+            Console.WriteLine("Compile completed at {0}.", DateTime.Now);
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
         }
