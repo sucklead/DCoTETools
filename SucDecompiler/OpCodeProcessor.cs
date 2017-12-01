@@ -18,15 +18,17 @@ namespace SucDecompiler
         private int codePointer = 0;
         private int totalOpCodes = 0;
         bool firstPrint = true;
-        Stack<DataIndex> stack = null;
-        Stack<ExpressionSyntax> expressionStack = null;
+        //Stack<DataIndex> stack = null;
+        //Stack<ExpressionSyntax> expressionStack = null;
+
+        Stack<object> stack = null;
 
         SyntaxToken semi = SyntaxFactory.Token(SyntaxFactory.TriviaList(), SyntaxKind.SemicolonToken, SyntaxFactory.TriviaList(SyntaxFactory.EndOfLine("\n")));
 
         public OpCodeProcessor()
         {
-            stack = new Stack<DataIndex>();
-            expressionStack = new Stack<ExpressionSyntax>();
+            stack = new Stack<object>();
+            //expressionStack = new Stack<ExpressionSyntax>();
             firstPrint = true;
         }
 
@@ -116,6 +118,10 @@ namespace SucDecompiler
             {
                 ProcessBinary(operation.OpCode);
             }
+            else if (operation.OpCode == OpCodeType.OP_AND)
+            {
+                ProcessBinary(operation.OpCode);
+            }
             else if (operation.OpCode == OpCodeType.OP_DISCARD)
             {
                 stack.Clear();
@@ -124,20 +130,23 @@ namespace SucDecompiler
 
         private ExpressionSyntax PopVariable()
         {
-            ExpressionSyntax variableExpression = null;
-            //do we have an expression on the stack?
-            if (expressionStack.Count > 0)
+            if (stack.Count == 0)
             {
-                variableExpression = expressionStack.Pop();
+                return null;
+            }        
+
+            object var = stack.Pop();
+
+            //do we have an expression on the stack?
+            if (var is ExpressionSyntax varExpression)
+            {
+                return varExpression;
             }
-            else if (stack.Count > 0)
+            else
             {
                 //find variable that was pushed
-                DataIndex conditionVariable = stack.Pop();
-                variableExpression = GetVariableExpression(conditionVariable);
+                return GetVariableExpression(var as DataIndex);
             }
-
-            return variableExpression;
         }
 
         private void ProcessBinary(OpCodeType opCode)
@@ -162,6 +171,10 @@ namespace SucDecompiler
             {
                 syntaxKind = SyntaxKind.MultiplyExpression;
             }
+            else if (opCode == OpCodeType.OP_AND)
+            {
+                syntaxKind = SyntaxKind.LogicalAndExpression;
+            }
             else
             {
                 throw new Exception();
@@ -177,7 +190,7 @@ namespace SucDecompiler
             //    assignment = SyntaxFactory.BinaryExpression(syntaxKind, rhsVariableExpression, lhsVariableExpression);
             //}
 
-            expressionStack.Push(assignment);
+            stack.Push(assignment);
         }
 
         private void ProcessComparison(OpCodeType opCode)
@@ -208,8 +221,7 @@ namespace SucDecompiler
                 syntaxKind = SyntaxKind.EqualsExpression;
             }
 
-            if (stack.Count == 0
-                && expressionStack.Count == 0)
+            if (stack.Count == 0)
             {
                 return;
             }
@@ -220,14 +232,15 @@ namespace SucDecompiler
             var binaryExpression = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
 
             //push expression onto the stack
-            expressionStack.Push(binaryExpression);
+            stack.Push(binaryExpression);
         }
 
         private void ProcessNeg()
         {
-            if (stack.Count > 0)
+            if (stack.Count > 0
+                && stack.Peek() is DataIndex)
             {
-                DataIndex stackTop = stack.Pop();
+                DataIndex stackTop = (DataIndex)stack.Pop();
                 stackTop.IsNegative = !stackTop.IsNegative;
                 stack.Push(stackTop);
             }
@@ -239,7 +252,7 @@ namespace SucDecompiler
 
             var notExpression = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, variableExpression);
 
-            expressionStack.Push(notExpression);
+            stack.Push(notExpression);
         }
 
         private void AddVariablesToBlock()
@@ -313,17 +326,15 @@ namespace SucDecompiler
 
         private void ProcessFunction()
         {
-            DataIndex function = stack.Pop();
+            DataIndex function = (DataIndex)stack.Pop();
             string functionName = FunctionTable.Functions[function.Value];
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName(functionName);
             ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList();
             List<ArgumentSyntax> arguments = new List<ArgumentSyntax>();
 
             //reverse the stacks
-            stack = new Stack<DataIndex>(stack);
-            expressionStack = new Stack<ExpressionSyntax>(expressionStack);
-            while (stack.Count > 0
-                   || expressionStack.Count > 0)
+            stack = new Stack<object>(stack);
+            while (stack.Count > 0)
             {
                 ExpressionSyntax paramSyntax = PopVariable();
                 //                DataIndex param = stack.Pop();
@@ -366,28 +377,14 @@ namespace SucDecompiler
 
         private void ProcessPrint()
         {
-            DataIndex printParam = null;
-            string argument;
-            if (stack.Count > 0)
-            {
-                printParam = stack.Pop();
+            ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList();
+            ExpressionSyntax argument = PopVariable();
+            List<ArgumentSyntax> arguments = new List<ArgumentSyntax>();
+            arguments.Add(SyntaxFactory.Argument(argument));
 
-                if (!VariableSet.Variables[printParam.Value].Static)
-                {
-                    argument = VariableSet.Variables[printParam.Value].Name;
-                }
-                else
-                {
-                    argument = VariableSet.GetCurrentValue(printParam.Value).ToString();
-                }
-            }
-            else
-            {
-                argument = "";
-            }
+            argumentList = argumentList.AddArguments(arguments.ToArray());
 
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName("Print");
-            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + argument + ")");
 
             InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);
 
