@@ -171,10 +171,10 @@ namespace SucDecompiler
 
         public string GetSubValue(ValueViewModel vvm, object sv)
         {
-            if (vvm.DataType == DataTypeType.String)
-            {
-                return string.Format("\"{0}\"", sv);
-            }
+            //if (vvm.DataType == DataTypeType.String)
+            //{
+            //    return string.Format("\"{0}\"", sv);
+            //}
 
             return sv.ToString();
         }

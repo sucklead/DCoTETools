@@ -1,8 +1,10 @@
 ﻿using banallib;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -128,8 +130,9 @@ namespace SucDecompiler
                 Directory.CreateDirectory(targetDir);
             }
 
-            this.SourceCode = this.SourceCode.Replace(@"\\", @"\");
-            this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
+            //this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
+            //this.SourceCode = this.SourceCode.Replace(@"\\", @"\");
+            //this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
             //this.SourceCode = this.SourceCode.Replace(Char.ConvertFromUtf32(0x3f), "'");
 
             File.WriteAllText(targetFilename, this.SourceCode, ansii);
@@ -163,7 +166,11 @@ namespace SucDecompiler
             BlockHelper.Root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
             BlockHelper.Root = BlockHelper.Root.AddMembers(globalStatements.ToArray());
 
-            SyntaxNode formatted = Formatter.Format(BlockHelper.Root, new AdhocWorkspace());
+            var workspace = new AdhocWorkspace();
+            //OptionSet options = workspace.Options;
+            //options = options.WithChangedOption(CSharpFormattingOptions.
+
+            SyntaxNode formatted = Formatter.Format(BlockHelper.Root, workspace); //, options);
             this.SourceCode = formatted.GetText().ToString();
             //this.SourceCode = BlockHelper.Root.GetText().ToString(); //.GetFullText().ToString();
         }

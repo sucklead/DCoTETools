@@ -30,6 +30,7 @@ class MyClass {
 
         if (nFakeShockTriggered == 0)
         {
+            Print("// Sebastian Marsh (001790):	That’s not going to happen, Robert.");
         }
 
         if (nFakeShockTriggered == 0)
@@ -37,7 +38,7 @@ class MyClass {
             // Stops the fake sound being played again
             D_SetGlobalInt("Global_nFakeShockTriggered", 1);
 
-            D_PlaySoundAmbient("Sound\\SFX\\\06002.wav", 0.60F, 1);
+            D_PlaySoundAmbient(@"Sound\SFX\06002.wav", 0.60F, 1);
         }
     }
     // END OF NPC CODE +++++++++++++++++++++++++++++++++++++++++++++++++//

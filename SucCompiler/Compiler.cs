@@ -350,27 +350,28 @@ namespace CocCompiler
                     variable = new Variable()
                     {
                         Address = nextValueAddress,
-                        Name = literalExpression.Token.ValueText,
+                        Name = literalExpression.Token.Text,
                         Value = literalExpression.Token.Value
                     };
                     nextValueAddress++;
 
                     if (node.Kind() == SyntaxKind.StringLiteralExpression)
                     {
-                        variable.Value = literalExpression.Token.ValueText;
+                        string stringValue = literalExpression.Token.Text;
+                        stringValue = stringValue.Substring(1, stringValue.Length - 2);
 
                         //reset these values
-                        variable.Name = "\"" + variable.Name + "\"";
-                        if (literalExpression.Token.Text.Contains('\\')) // TODO - check this
-                        {
-                            variable.Value = literalExpression.Token.Text.Replace(@"\\", @"\");
-                            //variable.Value = literalExpression.Token.ValueText;
-                        }
-                        if (literalExpression.Token.Text.Contains('\t'))
-                        {
-                            variable.Value = literalExpression.Token.Text.Replace("\t", SyntaxFactory.Tab.ToFullString());
-                        }
+                        //variable.Name = "\"" + variable.Name + "\"";
+                        //if (stringValue.Contains('\\')) // TODO - check this
+                        //{
+                        //    stringValue = stringValue.Replace(@"\\", @"\");
+                        //}
+                        //if (stringValue.Contains('\t'))
+                        //{
+                        //    stringValue = stringValue.Replace("\t", SyntaxFactory.Tab.ToFullString());
+                        //}
 
+                        variable.Value = stringValue;
                         variable.DataType = DataTypeType.String;
                         //variable.Reference = nextReferenceAddress;
                         //IncrementReferenceAddress(variable.DataType);

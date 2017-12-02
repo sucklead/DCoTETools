@@ -387,8 +387,10 @@ namespace SucDecompiler
         {
             ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList();
             ExpressionSyntax argument = PopVariable();
-            List<ArgumentSyntax> arguments = new List<ArgumentSyntax>();
-            arguments.Add(SyntaxFactory.Argument(argument));
+            List<ArgumentSyntax> arguments = new List<ArgumentSyntax>
+            {
+                SyntaxFactory.Argument(argument)
+            };
 
             argumentList = argumentList.AddArguments(arguments.ToArray());
 
@@ -474,8 +476,14 @@ namespace SucDecompiler
 
                 if (dataType == "String")
                 {
-                    string value = (string)VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "");
-                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value));
+                    object objValue = VariableSet.GetCurrentValue(variable);
+                    string value = (string)objValue;
+                    //value = value.ToString();
+                    //value = value.Replace("\"", "");
+                    //SyntaxTriviaList syntaxTriviaList = new SyntaxTriviaList();
+                    var syntaxToken = SyntaxFactory.ParseToken("\"" + value + "\"");
+                    //syntaxToken = SyntaxFactory.Literal(syntaxTriviaList, value, syntaxTriviaList,
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, syntaxToken);
                 }
                 else if (dataType == "Float")
                 {
