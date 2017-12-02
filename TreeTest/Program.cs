@@ -39,7 +39,7 @@ namespace TreeTest
 
             //add to first block
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName("Print");
-            ArgumentListSyntax argumentList = SyntaxFactory.ParseToken();SyntaxFactory.ParseArgumentList("(" + "arg1, arg2" + ")");
+            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + "arg1, arg2" + ")");
             //Print("// Sebastian Marsh (001790):	That’s not going to happen, Robert.");
             //
             InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);

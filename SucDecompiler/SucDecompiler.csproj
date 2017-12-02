@@ -171,6 +171,7 @@
   <ItemGroup>
     <Compile Include="BlockHelper.cs" />
     <Compile Include="DeCompiler.cs" />
+    <Compile Include="FixTable.cs" />
     <Compile Include="OpCodeProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -180,6 +181,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="fixtable.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -197,7 +201,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\workspaces\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\workspaces\DCoTEIDE\DCoTE\tools\"
+copy /Y "fixtable.csv" "S:\workspaces\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.2.0.0\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.2.0.0\build\dotnet\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

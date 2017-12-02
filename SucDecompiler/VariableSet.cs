@@ -100,6 +100,12 @@ namespace SucDecompiler
                             v.Name = "qVar" + v.Address.ToString();
                             break;
                     }
+
+                    if (FixTable.isStaticFix(parsedContent.ScriptName, v.Name))
+                    {
+                        v.Static = false;
+                    }
+
                     Variables.Add(value.Address, v);
                 }
             }

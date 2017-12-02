@@ -9,7 +9,7 @@ namespace SucDecompiler
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             string source = "";
             string target = "";
@@ -34,7 +34,11 @@ namespace SucDecompiler
                 Console.WriteLine();
                 Console.WriteLine("Easiest way to run it is from within the Scripts directory:");
                 Console.WriteLine("SucDecompiler bin src");
-                return;
+                Console.WriteLine();
+                Console.WriteLine("The file fixtable.csv holds a list of fixes for specific files.");
+                Console.WriteLine("They are to fix bugs in the original source and once those bugs");
+                Console.WriteLine("are fixed they won't be needed anymore.");
+                return 1;
             }
 
             //set source and target
@@ -45,8 +49,19 @@ namespace SucDecompiler
             Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Binaries -> {0}", source);
             Console.WriteLine("Target Source -> {0}", target);
-            
+
             //FunctionTable.LoadData();
+
+            string fixTableFile = "fixtable.csv";
+            if (!File.Exists(fixTableFile))
+            {
+                fixTableFile = @"tools\fixtable.csv";
+                if (!File.Exists(fixTableFile))
+                {
+                    Console.WriteLine("Fix table fixtable.csv not found!");
+                }
+            }
+            FixTable.LoadFixTable(fixTableFile);
 
             //set the options
             DeCompiler deCompiler = new DeCompiler();
@@ -72,7 +87,7 @@ namespace SucDecompiler
                     {
                         Console.WriteLine("Error, Decompile target {0} does not exist", Path.Combine(source, filename));
                         //Console.ReadLine();
-                        return;
+                        return 3;
                     }
                 }
             }
@@ -87,7 +102,7 @@ namespace SucDecompiler
                 {
                     Console.WriteLine("Error, Decompile source {0} does not exist", source);
                     //Console.ReadLine();
-                    return;
+                    return 4;
                 }
             }
             //save function table if anything has changed
@@ -96,6 +111,7 @@ namespace SucDecompiler
             Console.WriteLine("Decompile completed at {0}.", DateTime.Now);
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
+            return 0;
         }
     }
 }
