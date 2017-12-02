@@ -88,6 +88,7 @@ namespace SucDecompiler
                             break;
                         case ("point"):
                             v.Name = "ptVar" + v.Address.ToString();
+                            v.Static = false; //points are never static
                             break;
                         case ("character"):
                             v.Name = "cVar" + v.Address.ToString();
