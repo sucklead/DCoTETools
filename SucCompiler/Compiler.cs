@@ -363,8 +363,12 @@ namespace CocCompiler
                         variable.Name = "\"" + variable.Name + "\"";
                         if (literalExpression.Token.Text.Contains('\\')) // TODO - check this
                         {
-                            variable.Value = literalExpression.Token.Text.Replace("\"", ""); //.TrimEnd().TrimStart();
+                            variable.Value = literalExpression.Token.Text.Replace(@"\\", @"\");
                             //variable.Value = literalExpression.Token.ValueText;
+                        }
+                        if (literalExpression.Token.Text.Contains('\t'))
+                        {
+                            variable.Value = literalExpression.Token.Text.Replace("\t", SyntaxFactory.Tab.ToFullString());
                         }
 
                         variable.DataType = DataTypeType.String;
@@ -1139,14 +1143,14 @@ namespace CocCompiler
             }
 
             byte[] bytes = System.Text.Encoding.GetEncoding(1252).GetBytes(value);
-            //bytes = System.Text.Encoding.Convert(System.Text.Encoding.Unicode, System.Text.Encoding.ASCII, bytes);
+            //bytes = System.Text.Encoding.Convert(System.Text.Encoding.Unicode, ansii, bytes);
             foreach (byte b in bytes)
             {
                 binary.Add(b);
             }
 
             ////check for atleast one upper case
-            //System.Text.Encoding ascii = System.Text.Encoding.ASCII;
+            //System.Text.Encoding ascii = ansii;
             //Byte[] encodedBytes = ascii.GetBytes(value);
             //foreach (Byte b in encodedBytes)
             //{

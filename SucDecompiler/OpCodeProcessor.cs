@@ -122,6 +122,10 @@ namespace SucDecompiler
             {
                 ProcessBinary(operation.OpCode);
             }
+            else if (operation.OpCode == OpCodeType.OP_OR)
+            {
+                ProcessBinary(operation.OpCode);
+            }
             else if (operation.OpCode == OpCodeType.OP_DISCARD)
             {
                 stack.Clear();
@@ -174,6 +178,10 @@ namespace SucDecompiler
             else if (opCode == OpCodeType.OP_AND)
             {
                 syntaxKind = SyntaxKind.LogicalAndExpression;
+            }
+            else if (opCode == OpCodeType.OP_OR)
+            {
+                syntaxKind = SyntaxKind.LogicalOrExpression;
             }
             else
             {

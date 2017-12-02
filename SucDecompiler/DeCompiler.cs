@@ -65,6 +65,7 @@ namespace SucDecompiler
         }
 
         CSharpSyntaxTree tree = null;
+        Encoding ansii = Encoding.GetEncoding(1252);
 
         public DeCompiler()
             {
@@ -126,7 +127,12 @@ namespace SucDecompiler
             {
                 Directory.CreateDirectory(targetDir);
             }
-            File.WriteAllText(targetFilename, this.SourceCode.Replace(@"\\",@"\"));
+
+            this.SourceCode = this.SourceCode.Replace(@"\\", @"\");
+            this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
+            //this.SourceCode = this.SourceCode.Replace(Char.ConvertFromUtf32(0x3f), "'");
+
+            File.WriteAllText(targetFilename, this.SourceCode, ansii);
         }
 
         VariableSet variableSet = new VariableSet();
@@ -137,7 +143,7 @@ namespace SucDecompiler
 
             //create tree
             CSharpParseOptions cSharpParseOptions = new CSharpParseOptions(LanguageVersion.CSharp1, DocumentationMode.Parse, SourceCodeKind.Script);
-            tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions) as CSharpSyntaxTree;
+            tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions, encoding: ansii) as CSharpSyntaxTree;
             BlockHelper.Root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
 
             variableSet.BuildVariables(this.ParsedContent);
@@ -153,7 +159,7 @@ namespace SucDecompiler
                 globalStatements.Add(globalStatement);
             }
 
-            tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions) as CSharpSyntaxTree;
+            tree = CSharpSyntaxTree.ParseText("", options: cSharpParseOptions, encoding: ansii) as CSharpSyntaxTree;
             BlockHelper.Root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
             BlockHelper.Root = BlockHelper.Root.AddMembers(globalStatements.ToArray());
 

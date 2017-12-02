@@ -108,7 +108,7 @@ namespace banallib
 
             using (MemoryStream memoryStream = new MemoryStream(Contents))
             {
-                using (BinaryReader reader = new BinaryReader(memoryStream))
+                using (BinaryReader reader = new BinaryReader(memoryStream, Encoding.GetEncoding(1252)))
                 {
                     parsedContent.ScriptName = this.ReadString(reader);
                     Console.WriteLine("Script Name: {0}", parsedContent.ScriptName);
@@ -249,10 +249,10 @@ namespace banallib
             //read through commmands
             for (short i = 0; i < parsedContent.NumberOfValues; i++)
             {
-                Value value = new Value();
-                value.Address = (short)(parsedContent.BaseAddress + i);
-                value.DataType = (DataTypeType)reader.ReadByte();
-
+                Value value = new Value() {
+                    Address = (short)(parsedContent.BaseAddress + i),
+                    DataType = (DataTypeType)reader.ReadByte()
+                };
                 if (value.DataType == DataTypeType.Character
                     || value.DataType == DataTypeType.String
                     || value.DataType == DataTypeType.Point
