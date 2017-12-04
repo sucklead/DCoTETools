@@ -639,7 +639,9 @@ namespace CocCompiler
                 OpCodes.Add(opGettop);
 
                 //for an if we need to keep the value
-                if (assignmentExpression.Parent.Kind() != SyntaxKind.IfStatement)
+                //or for a double assign
+                if (assignmentExpression.Parent.Kind() != SyntaxKind.IfStatement
+                    && assignmentExpression.Parent.Kind() != SyntaxKind.SimpleAssignmentExpression)
                 {
                     //do a discard
                     OP_DISCARD opDiscard = new OP_DISCARD();

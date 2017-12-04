@@ -346,7 +346,6 @@ namespace SucDecompiler
 
             AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
 
-
             //is this a bad comparison that is actually an assign?
             if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_JMPF)
             {
@@ -355,6 +354,14 @@ namespace SucDecompiler
             }
             else
             {
+                ////is this a double assign?
+                //if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+                //{
+                //    var variableIdentifier2 = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
+
+                //    assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier2, assignment);
+                //    codePointer++;
+                //}
                 var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
                 //add to the current block
                 BlockHelper.AddToCurrentBlock(expressionStatement);
@@ -399,7 +406,7 @@ namespace SucDecompiler
                 //TODO - this needs to work better for a = b = fn(c);
 
                 //add to the current block
-                BlockHelper.AddToCurrentBlock(expressionStatement);
+                //BlockHelper.AddToCurrentBlock(expressionStatement);
                 var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
                 var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
                 expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
