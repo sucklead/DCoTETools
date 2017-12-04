@@ -533,7 +533,14 @@ namespace SucDecompiler
                     {
                         value = value * -1;
                     }
+
                     expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                    // cope with -0 !!!
+                    if (value == 0
+                        && dataIndex.IsNegative)
+                    {
+                        expressionSyntax = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, expressionSyntax);
+                    }
                 }
                 else if (dataType == "Int")
                 {
