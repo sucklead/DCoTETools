@@ -234,7 +234,7 @@ namespace banalg
 
             //this.FileName = @"F:\Games\Call Of Cthulhu DCoTE\Scripts\gamescripts\08_boat\yithmindswaps\ms_caproomdeepattack.bin";
             //this.FileName = @"S:\Games\Call Of Cthulhu DCoTE\Scripts\bin\scripts\10_air_filled_tunnels\tunnelsstartup.bin";
-            this.FileName = @"S:\Games\Call Of Cthulhu DCoTE\Scripts\bin\gamescripts\03_streets_two\trigsewerleavedeathpittoproom.bin";
+            this.FileName = @"C:\workspaces\DCoTEIDE\DCoTE\originalbin\gamescripts\07_esoteric_order\health_monitoring\monitor_crawling_health.bin";
             //this.NewBase = 760;
 
         }
@@ -703,10 +703,10 @@ namespace banalg
 
             BaseAddress = ParsedContent.BaseAddress;
 
-            
-            BuildOpCodes();
 
             BuildVariables();
+
+            BuildOpCodes();
 
             ////new
             //this.SourceCode = "";
@@ -814,6 +814,12 @@ namespace banalg
                         {
                             opCodeViewModel.FunctionPointerName = FunctionTable.Functions[opCodeViewModel.DataIndexValue];
                         }
+                    }
+                    else if (opCodeViewModel.OpCode == OpCodeType.OP_PUSH)
+                    {
+                        //HACK add values in
+                        opCodeViewModel.FunctionPointerName = GetCurrentValue(opCodeViewModel.DataIndexValue).ToString();
+                        Console.WriteLine(opCodeViewModel.FunctionPointerName);
                     }
                 }
 
@@ -936,6 +942,10 @@ namespace banalg
                     where v.Address == address
                     select v;
             ValueViewModel vvm = q.FirstOrDefault();
+            if (vvm == null)
+            {
+                return "";
+            }
 
             StringBuilder sb = new StringBuilder();
             if (vvm.SubValue1 != null)

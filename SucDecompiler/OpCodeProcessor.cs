@@ -381,9 +381,21 @@ namespace SucDecompiler
             while (stack.Count > 0)
             {
                 ExpressionSyntax paramSyntax = PopVariable();
-                //                DataIndex param = stack.Pop();
-                //                arguments.Add(SyntaxFactory.Argument(GetVariableExpression(param)));
                 arguments.Add(SyntaxFactory.Argument(paramSyntax));
+                // IsCharacterDead only takes one parameter and we need to cope with bug
+                if (functionName == "IsCharacterDead"
+                    && stack.Count > 0)
+                {
+                    // cope with bug
+                    if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_EQUAL)
+                    {
+                        arguments.Clear();
+                        ExpressionSyntax paramSyntax2 = PopVariable();
+                        arguments.Add(SyntaxFactory.Argument(paramSyntax2));
+                        stack.Push(paramSyntax);
+                    }
+                    break;
+                }
             }
             argumentList = argumentList.AddArguments(arguments.ToArray());
 
@@ -391,28 +403,36 @@ namespace SucDecompiler
 
             ExpressionStatementSyntax expressionStatement = SyntaxFactory.ExpressionStatement(invocationExpression, semi);
 
-            //are we assigning to a variable?
-            if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+            // are we assigning to an equal as a bug?
+            if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_EQUAL)
             {
-                var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
-                var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
-                expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
-
-                //make sure we move past the OP_GETTOP
+                var variableIdentifier = PopVariable();
+                var binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.EqualsExpression, variableIdentifier, invocationExpression);
+                expressionStatement = SyntaxFactory.ExpressionStatement(binaryExpression, semi);
+                //make sure we move past the OP_EQUAL
                 codePointer++;
             }
-            if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
             {
-                //TODO - this needs to work better for a = b = fn(c);
+                //are we assigning to a variable?
+                if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+                {
+                    var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
+                    var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
+                    expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
 
-                //add to the current block
-                //BlockHelper.AddToCurrentBlock(expressionStatement);
-                var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
-                var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
-                expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+                    //make sure we move past the OP_GETTOP
+                    codePointer++;
+                }
+                if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_GETTOP)
+                {
+                    //add to the current block
+                    var variableIdentifier = SyntaxFactory.IdentifierName(VariableSet.Variables[OpCodes[codePointer + 1].DataIndex.Value].Name);
+                    var assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, expressionStatement.Expression);
+                    expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
 
-                //make sure we move past the OP_GETTOP
-                codePointer++;
+                    //make sure we move past the OP_GETTOP
+                    codePointer++;
+                }
             }
 
             //add to the current block

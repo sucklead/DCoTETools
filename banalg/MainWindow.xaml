@@ -76,7 +76,7 @@
                         <!-- <GridViewColumn Header="DataIndexValue" DisplayMemberBinding="{Binding Path=DataIndexValue, Converter={StaticResource DataIndexConverter}}"/> -->
                         <GridViewColumn Header="Data Offset" DisplayMemberBinding="{Binding Path=DataIndexValueHex, Converter={StaticResource HexValueConverter}}"/>
                         <GridViewColumn Header="Data Address" DisplayMemberBinding="{Binding Path=DataIndexValueBase, Converter={StaticResource HexValueConverter}}"/>
-                        <GridViewColumn Header="Function Name" DisplayMemberBinding="{Binding Path=FunctionPointerName}"/>
+                        <GridViewColumn Header="Data Value" DisplayMemberBinding="{Binding Path=FunctionPointerName}"/>
                         <!--<GridViewColumn Header="DataIndexIsFunctionPointer" DisplayMemberBinding="{Binding Path=DataIndexIsFunctionPointer}"/>-->
                     </GridView>
                 </ListView.View>
