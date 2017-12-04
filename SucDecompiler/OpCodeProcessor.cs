@@ -326,10 +326,19 @@ namespace SucDecompiler
 
             AssignmentExpressionSyntax assignment = SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, variableIdentifier, variableExpression);
 
-            var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
 
-            //add to the current block
-            BlockHelper.AddToCurrentBlock(expressionStatement);
+            //is this a bad comparison that is actually an assign?
+            if (OpCodes[codePointer + 1].OpCode == OpCodeType.OP_JMPF)
+            {
+                //push expression onto the stack
+                stack.Push(assignment);
+            }
+            else
+            {
+                var expressionStatement = SyntaxFactory.ExpressionStatement(assignment, semi);
+                //add to the current block
+                BlockHelper.AddToCurrentBlock(expressionStatement);
+            }
         }
 
         private void ProcessFunction()
