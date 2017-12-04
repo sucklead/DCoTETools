@@ -239,18 +239,38 @@ namespace SucDecompiler
 
             var binaryExpression = SyntaxFactory.BinaryExpression(syntaxKind, lhsVariableExpression, rhsVariableExpression);
 
-            //push expression onto the stack
-            stack.Push(binaryExpression);
+            //check for an OP_EQUAL followed by OP_DISCARD where == is used instead of =
+            if (syntaxKind == SyntaxKind.EqualsExpression
+                && OpCodes[codePointer + 1].OpCode == OpCodeType.OP_DISCARD)
+            {
+                var expressionStatement = SyntaxFactory.ExpressionStatement(binaryExpression, semi);
+                //add to the current block
+                BlockHelper.AddToCurrentBlock(expressionStatement);
+            }
+            else
+            {
+                //push expression onto the stack
+                stack.Push(binaryExpression);
+            }
         }
 
         private void ProcessNeg()
         {
-            if (stack.Count > 0
-                && stack.Peek() is DataIndex)
+            if (stack.Count > 0)
             {
-                DataIndex stackTop = (DataIndex)stack.Pop();
-                stackTop.IsNegative = !stackTop.IsNegative;
-                stack.Push(stackTop);
+                if (stack.Peek() is DataIndex)
+                {
+                    DataIndex stackTop = (DataIndex)stack.Pop();
+                    stackTop.IsNegative = !stackTop.IsNegative;
+                    stack.Push(stackTop);
+                }
+                else
+                {
+                    var expressionSyntax = stack.Pop() as ExpressionSyntax;
+                    expressionSyntax = SyntaxFactory.ParenthesizedExpression(expressionSyntax);
+                    expressionSyntax = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, expressionSyntax);
+                    stack.Push(expressionSyntax);
+                }
             }
         }
 
@@ -500,6 +520,7 @@ namespace SucDecompiler
                 }
                 else if (dataType == "Float")
                 {
+                    //Double
                     float value = float.Parse(VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "").Replace(@"\", ""));
                     if (dataIndex.IsNegative)
                     {
