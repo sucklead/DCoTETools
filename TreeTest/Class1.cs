@@ -26,7 +26,7 @@ class MyClass {
 
         nFakeShockTriggered = D_GetGlobalInt("Global_nFakeShockTriggered");
 
-        nFakeShockTriggered = nFakeShockTriggered + 1;
+        nFakeShockTriggered = -nFakeShockTriggered + 1;
 
         if (nFakeShockTriggered == 0)
         {

@@ -478,6 +478,10 @@ namespace SucDecompiler
             if (!VariableSet.Variables[variable].Static)
             {
                 expressionSyntax = SyntaxFactory.IdentifierName(VariableSet.Variables[variable].Name);
+                if (dataIndex.IsNegative)
+                {
+                    expressionSyntax = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, expressionSyntax);
+                }
             }
             else
             {
