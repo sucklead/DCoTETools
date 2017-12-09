@@ -1,7 +1,14 @@
-﻿gamescripts\08_boat\yithmindswaps\ms_outsideboatfirstattack.hfs,UnassignedVariable,nVar765
+﻿gamescripts\01_house\actionnodescripts\autopsyroom\play_autopsy_cultist.hfs,UnassignedVariable,nVar771
+gamescripts\01_house\actionnodescripts\exterior\actionpolicecar.hfs,UnassignedVariable,nVar763
+gamescripts\01_house\actionnodescripts\generic\action_cthulhu_flames_picture.hfs,UnassignedVariable,nVar763
+gamescripts\01_house\actionnodescripts\morgue\action_medical_bottles.hfs,UnassignedVariable,nVar769
+gamescripts\01_house\corner_cultist_run.hfs,UnassignedVariable,nVar763
+gamescripts\01_house\corner_cultist_run.hfs,UnassignedVariable,nVar764
+gamescripts\02_streets_one\waiteshouse\playgrowls.hfs,UnassignedVariable,nVar766
+gamescripts\08_boat\yithmindswaps\ms_outsideboatfirstattack.hfs,UnassignedVariable,nVar765
 gamescripts\08_boat\yithmindswaps\ms_outsideboatfirstattack.hfs,UnassignedVariable,nVar766
 gamescripts\08_boat\yithmindswaps\ms_caproomdeepattack.hfs,UnassignedVariable,nVar765
-gamescripts\01_house\actionnodescripts\morgue\action_medical_bottles.hfs,UnassignedVariable,nVar769
 gamescripts\09_reef\fallentodeath.hfs,UnassignedVariable,nVar764
-scripts\misc01_city_of_dreams_03\shadow3_5.hfs,UnassignedVariable,nVar772
 gamescripts\general\insanity\startsanitycellsequenceex.hfs,UnassignedVariable,fVar783
+scripts\misc01_city_of_dreams_03\shadow3_5.hfs,UnassignedVariable,nVar772
+

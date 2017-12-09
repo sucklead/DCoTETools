@@ -130,10 +130,6 @@ namespace SucDecompiler
                 Directory.CreateDirectory(targetDir);
             }
 
-            //this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
-            //this.SourceCode = this.SourceCode.Replace(@"\\", @"\");
-            //this.SourceCode = this.SourceCode.Replace(@"\t", SyntaxFactory.Tab.ToString());
-            //this.SourceCode = this.SourceCode.Replace(Char.ConvertFromUtf32(0x3f), "'");
 
             File.WriteAllText(targetFilename, this.SourceCode, ansii);
         }
@@ -155,6 +151,9 @@ namespace SucDecompiler
 
             //move first block contents to root
             BlockSyntax block = BlockHelper.GetFirstBlock();
+
+            block = variableSet.AddVariablesToBlock(block);
+
             List<MemberDeclarationSyntax> globalStatements = new List<MemberDeclarationSyntax>();
             foreach (var statement in block.Statements)
             {
@@ -166,6 +165,8 @@ namespace SucDecompiler
             BlockHelper.Root = tree.GetCompilationUnitRoot(); //(CompilationUnitSyntax)tree.GetRoot();
             BlockHelper.Root = BlockHelper.Root.AddMembers(globalStatements.ToArray());
 
+
+
             var workspace = new AdhocWorkspace();
             //OptionSet options = workspace.Options;
             //options = options.WithChangedOption(CSharpFormattingOptions.
@@ -174,7 +175,6 @@ namespace SucDecompiler
             this.SourceCode = formatted.GetText().ToString();
             //this.SourceCode = BlockHelper.Root.GetText().ToString(); //.GetFullText().ToString();
         }
-
 
         private void ParseOpCodes()
         {

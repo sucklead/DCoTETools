@@ -39,7 +39,7 @@ namespace TreeTest
 
             //add to first block
             ExpressionSyntax expressionSyntax = SyntaxFactory.IdentifierName("Print");
-            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + "arg1, arg2" + ")");
+            ArgumentListSyntax argumentList = SyntaxFactory.ParseArgumentList("(" + "arg1, \"literal1\"" + ")");
             //Print("// Sebastian Marsh (001790):	That’s not going to happen, Robert.");
             //
             InvocationExpressionSyntax invocationExpression = SyntaxFactory.InvocationExpression(expressionSyntax, argumentList);
@@ -69,16 +69,28 @@ namespace TreeTest
             //add to the current block
             AddToCurrentBlock(expressionStatement);
 
-
-
-
-
-            AddVariables();
-
             //move back a block
             GetPreviousBlock();
 
+            var variable = GetVariable();
 
+            SyntaxToken insertAfter = block.GetFirstToken();
+            SyntaxNode insertAfterNode = null;
+
+            BlockSyntax theBlock = GetCurrentBlock();
+            foreach (var token in theBlock.DescendantTokens().Where(n => n.ValueText == "literal1"))
+            {
+                insertAfter = FindNextSemi(token);
+                insertAfterNode = insertAfter.Parent;
+            }
+
+            VariableDeclaratorSyntax declarator = SyntaxFactory.VariableDeclarator(identifier: SyntaxFactory.Identifier("var12"));
+            VariableDeclarationSyntax variableDeclaration = SyntaxFactory.VariableDeclaration(type: SyntaxFactory.ParseTypeName("String "), variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>().Add(declarator));
+            SyntaxTokenList modifiers = new SyntaxTokenList();
+            LocalDeclarationStatementSyntax localDeclaration = SyntaxFactory.LocalDeclarationStatement(modifiers, variableDeclaration, semi);
+            BlockSyntax addBlock = SyntaxFactory.Block(localDeclaration);
+
+            root = root.InsertNodesAfter(insertAfterNode, addBlock.ChildNodes());
 
             //show source
             //block = root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(currentBlock)).Single();
@@ -89,6 +101,21 @@ namespace TreeTest
             Console.WriteLine("Complete.");
             Console.ReadLine();
         }
+        
+        private static SyntaxToken FindNextSemi(SyntaxToken token)
+        {
+            SyntaxToken nextToken = token;
+            while (nextToken != null)
+            {
+                if (nextToken.IsKind(SyntaxKind.SemicolonToken))
+                {
+                    return nextToken;
+                }
+                nextToken = nextToken.GetNextToken();
+            }
+
+            return token;
+        }
 
         private static void GetPreviousBlock()
         {
@@ -97,7 +124,7 @@ namespace TreeTest
             currentBlock = block.GetAnnotations("Block").Single();
         }
 
-        private static void AddVariables()
+        private static StatementSyntax GetVariable()
         {
             TypeSyntax intType = SyntaxFactory.ParseTypeName("int ");
 
@@ -111,8 +138,13 @@ namespace TreeTest
             SyntaxTokenList modifiers = new SyntaxTokenList();
 
             LocalDeclarationStatementSyntax localDeclaration = SyntaxFactory.LocalDeclarationStatement(modifiers, variableDeclaration, semi);
-            AddToCurrentBlock(localDeclaration);
 
+            return localDeclaration;
+        }
+
+        private static BlockSyntax GetCurrentBlock()
+        {
+            return root.DescendantNodes().OfType<BlockSyntax>().Where(n => n.HasAnnotation(currentBlock)).Single();
         }
 
         private static void AddToCurrentBlock(StatementSyntax newStatement)

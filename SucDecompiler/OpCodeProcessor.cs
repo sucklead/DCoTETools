@@ -17,7 +17,7 @@ namespace SucDecompiler
 
         private int codePointer = 0;
         private int totalOpCodes = 0;
-        bool firstPrint = true;
+        //bool firstPrint = true;
         //Stack<DataIndex> stack = null;
         //Stack<ExpressionSyntax> expressionStack = null;
 
@@ -29,7 +29,7 @@ namespace SucDecompiler
         {
             stack = new Stack<object>();
             //expressionStack = new Stack<ExpressionSyntax>();
-            firstPrint = true;
+            //firstPrint = true;
         }
 
         internal void ProcessOpCodes()
@@ -37,12 +37,12 @@ namespace SucDecompiler
             totalOpCodes = OpCodes.Count;
             codePointer = 0;
 
-            if (totalOpCodes > 2
-                && OpCodes[1].OpCode != OpCodeType.OP_PRINT)
-            {
-                AddVariablesToBlock();
-                firstPrint = false;
-            }
+            // check for file with no print as first statement
+            //if (totalOpCodes > 2
+            //    && OpCodes[0].OpCode != OpCodeType.OP_PUSH
+            //    && OpCodes[1].OpCode != OpCodeType.OP_PRINT)
+            //{
+            //}
 
             //parse the opcodes
             while (codePointer < totalOpCodes)
@@ -94,7 +94,7 @@ namespace SucDecompiler
             }
             else if (operation.OpCode == OpCodeType.OP_PUSH)
             {
-                stack.Push(operation.DataIndex);
+                ProcessPush(operation);
             }
             else if (operation.OpCode == OpCodeType.OP_GETTOP)
             {
@@ -130,6 +130,25 @@ namespace SucDecompiler
             {
                 stack.Clear();
             }
+        }
+
+        private void ProcessPush(Operation operation)
+        {
+            //annotate current node
+            //"StaticVar", variable.Key.ToString()
+            //short variableValue = operation.DataIndex.Value;
+            //Variable variable = VariableSet.Variables[variableValue];
+
+            ////if not static condition is the variable itself
+            //if (variable.Static)
+            //{
+            //    if (variable.FirstToken == null)
+            //    {
+            //        variable.FirstToken = 
+            //    }
+            //}
+            //add the value to the stack
+            stack.Push(operation.DataIndex);
         }
 
         private ExpressionSyntax PopVariable()
@@ -460,12 +479,6 @@ namespace SucDecompiler
             //add to the current block
             BlockHelper.AddToCurrentBlock(expressionStatement);
             //currentBlock = currentBlock.WithStatements(statements);
-
-            if (firstPrint)
-            {
-                firstPrint = false;
-                AddVariablesToBlock(); // = currentBlock.AddStatements(expressionStatement);
-            }
 
             //GlobalStatementSyntax globalStatement = Syntax.GlobalStatement(expressionStatement);
         }
