@@ -44,7 +44,7 @@ namespace SucBatch
                 string binariesDirectory = args[0];
                 if (!Directory.Exists(binariesDirectory))
                 {
-                    Console.WriteLine("Binaries directory not found!");
+                    Console.WriteLine("ERROR: Binaries directory not found!");
                     return;
                 }
 
@@ -62,7 +62,7 @@ namespace SucBatch
                     string inputDirectory = args[1];
                     if (!Directory.Exists(inputDirectory))
                     {
-                        Console.WriteLine("Input directory not found!");
+                        Console.WriteLine("ERROR: Input directory not found!");
                         return;
                     }
 
@@ -77,7 +77,7 @@ namespace SucBatch
 
                     if (lstFiles.Length == 0)
                     {
-                        Console.WriteLine("No .lst files found!");
+                        Console.WriteLine("ERROR: No .lst files found!");
                         return;
                     }
 
@@ -93,7 +93,12 @@ namespace SucBatch
                             File.Copy(batcher.OutputFilename, batcher.OutputFilename + ".orig");
                         }
 
-                        batcher.CreateBatch();
+                        bool success = batcher.CreateBatch();
+                        if (!success)
+                        {
+                            Console.WriteLine("ERROR: Aborting batch creation");
+                            break;
+                        }
                     }
                 }
                 else
@@ -104,18 +109,18 @@ namespace SucBatch
                     //verify output file names
                     if (!File.Exists(batcher.InputFilename))
                     {
-                        Console.WriteLine("Input file {0} doesn't exist", batcher.InputFilename);
+                        Console.WriteLine("ERROR: Input file {0} doesn't exist", batcher.InputFilename);
                         return;
                     }
                     if (!batcher.InputFilename.EndsWith(".lst"))
                     {
-                        Console.WriteLine("Input file must be a .lst file");
+                        Console.WriteLine("ERROR: Input file must be a .lst file");
                         return;
                     }
 
                     if (!batcher.OutputFilename.EndsWith(".bat"))
                     {
-                        Console.WriteLine("Output file must be a .bat file");
+                        Console.WriteLine("ERROR: Output file must be a .bat file");
                         return;
                     }
 
@@ -125,14 +130,19 @@ namespace SucBatch
                         File.Copy(batcher.OutputFilename, batcher.OutputFilename + ".orig");
                     }
 
+                    FileStream f = null;
                     try
                     {
-                        File.Create(batcher.OutputFilename);
+                        f = File.Create(batcher.OutputFilename);
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("Error creating output file.");
+                        Console.WriteLine("ERROR: Error creating output file.");
                         return;
+                    }
+                    finally
+                    {
+                        f.Dispose();
                     }
 
                     batcher.CreateBatch();
@@ -140,7 +150,7 @@ namespace SucBatch
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error encountered batching scripts:");
+                Console.WriteLine("ERROR: Error encountered batching scripts:");
                 Console.WriteLine(ex.ToString());
             }
 

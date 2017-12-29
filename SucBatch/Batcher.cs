@@ -38,7 +38,7 @@ namespace SucBatch
 
                         if (!File.Exists(scriptName))
                         {
-                            Console.WriteLine("Invalid file in file list {0}", script);
+                            Console.WriteLine("ERROR: Invalid file in file list {0}", script);
                             return false;
                         }
 
@@ -53,7 +53,15 @@ namespace SucBatch
                 }
 
                 Console.WriteLine("Writing output file {0}..", OutputFilename);
-                File.WriteAllBytes(OutputFilename, memoryStream.ToArray());
+
+                try
+                {
+                    File.WriteAllBytes(OutputFilename, memoryStream.ToArray());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ERROR: could not write file!");
+                }
                 Console.WriteLine("Batched {0} scripts into output file {1}", scriptsToAdd.Length, OutputFilename);
             }
             return true;

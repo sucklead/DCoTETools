@@ -10,7 +10,7 @@ namespace CocCompiler
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             string source = "";
             string target = "";
@@ -37,7 +37,7 @@ namespace CocCompiler
                 Console.WriteLine();
                 Console.WriteLine("Easiest way to run it is from within the Scripts directory:");
                 Console.WriteLine("SucCompiler src newbin");
-                return;
+                return -1;
             }
 
             //set source and target
@@ -85,14 +85,17 @@ namespace CocCompiler
                         filename = filename.Substring(source.Length + 1);
                     }
 
+                    //convert to windows
+                    filename = filename.Replace("/","\\");
+
                     if (File.Exists(Path.Combine(source, filename)))
                     {
                         compiler.CompileFile(filename);
                     }
                     else
                     {
-                        Console.WriteLine("Error, Compile source {0} does not exist", Path.Combine(source, filename));
-                        return;
+                        Console.WriteLine("ERROR: Compile source {0} does not exist", Path.Combine(source, filename));
+                        return -2;
                     }
                 }
             }
@@ -105,8 +108,8 @@ namespace CocCompiler
                 }
                 else
                 {
-                    Console.WriteLine("Error, Compile source {0} does not exist", source);
-                    return;
+                    Console.WriteLine("ERROR: Compile source {0} does not exist", source);
+                    return -3;
                 }
             }
             //save function table if anything has changed
@@ -115,6 +118,7 @@ namespace CocCompiler
             Console.WriteLine("Compile completed at {0}.", DateTime.Now);
             //Console.WriteLine("\n\nPress <Enter> to exit..");
             //Console.ReadLine();
+            return 0;
         }
 
     }

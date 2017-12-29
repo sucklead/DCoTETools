@@ -2,8 +2,11 @@
 gamescripts\01_house\actionnodescripts\exterior\actionpolicecar.hfs,UnassignedVariable,nVar763
 gamescripts\01_house\actionnodescripts\generic\action_cthulhu_flames_picture.hfs,UnassignedVariable,nVar763
 gamescripts\01_house\actionnodescripts\morgue\action_medical_bottles.hfs,UnassignedVariable,nVar769
+gamescripts\01_house\actionnodescripts\teleporter\usecrystal.hfs,UnassignedVariable,fVar763
+gamescripts\01_house\bullets\gunbattledownstairs.hfs,UnassignedVariable,nVar763
 gamescripts\01_house\corner_cultist_run.hfs,UnassignedVariable,nVar763
 gamescripts\01_house\corner_cultist_run.hfs,UnassignedVariable,nVar764
+gamescripts\02_streets_one\generalstore\putbirchinstore.hfs,UnassignedVariable,nVar763
 gamescripts\02_streets_one\waiteshouse\playgrowls.hfs,UnassignedVariable,nVar766
 gamescripts\08_boat\yithmindswaps\ms_outsideboatfirstattack.hfs,UnassignedVariable,nVar765
 gamescripts\08_boat\yithmindswaps\ms_outsideboatfirstattack.hfs,UnassignedVariable,nVar766
