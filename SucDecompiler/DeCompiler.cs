@@ -116,6 +116,7 @@ namespace SucDecompiler
             string targetFilename = Path.Combine(TargetDirectory, filename.Replace(".bin", ".hfs"));
             string targetDir = Path.GetDirectoryName(targetFilename);
 
+            Console.Write("Decompiling {0}...", sourceFilename);
             this.ParsedContent = this.Analyse.AnalyseFile(sourceFilename);
 
             if (this.ParsedContent == null)
@@ -132,6 +133,7 @@ namespace SucDecompiler
 
 
             File.WriteAllText(targetFilename, this.SourceCode, ansii);
+            Console.WriteLine("OK");
         }
 
         VariableSet variableSet = new VariableSet();

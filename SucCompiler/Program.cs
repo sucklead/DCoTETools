@@ -41,8 +41,8 @@ namespace CocCompiler
             }
 
             //set source and target
-            source = args[0];
-            target = args[1];
+            source = args[0].Replace("/", "\\");
+            target = args[1].Replace("/", "\\"); ;
 
             Console.WriteLine("SucCompiler by sucklead started at {0}", DateTime.Now);
             Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
@@ -79,15 +79,13 @@ namespace CocCompiler
             {
                 for (int a = 2; a < args.Length; a++)
                 {
-                    filename = args[a];
+                    filename = args[a].Replace("/", "\\"); ;
                     if (filename.StartsWith(source))
                     {
                         filename = filename.Substring(source.Length + 1);
                     }
 
                     //convert to windows
-                    filename = filename.Replace("/","\\");
-
                     if (File.Exists(Path.Combine(source, filename)))
                     {
                         compiler.CompileFile(filename);

@@ -42,8 +42,8 @@ namespace SucDecompiler
             }
 
             //set source and target
-            source = args[0];
-            target = args[1];
+            source = args[0].Replace("/","\\");
+            target = args[1].Replace("/", "\\");
 
             Console.WriteLine("SucDecompiler by sucklead started at {0}", DateTime.Now);
             Console.WriteLine("Version [{0}]", Assembly.GetExecutingAssembly().GetName().Version);
@@ -55,10 +55,11 @@ namespace SucDecompiler
             string fixTableFile = "fixtable.csv";
             if (!File.Exists(fixTableFile))
             {
-                fixTableFile = @"tools\fixtable.csv";
+                fixTableFile = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "fixtable.csv");
                 if (!File.Exists(fixTableFile))
                 {
                     Console.WriteLine("Fix table fixtable.csv not found!");
+                    return -5;
                 }
             }
             FixTable.LoadFixTable(fixTableFile);
@@ -72,7 +73,7 @@ namespace SucDecompiler
             {
                 for (int a = 2; a < args.Length; a++)
                 {
-                    filename = args[a];
+                    filename = args[a].Replace("/", "\\");
                     filename = filename.Replace(".hfs",".bin");
                     if (filename.StartsWith(source))
                     {
@@ -85,7 +86,7 @@ namespace SucDecompiler
                     }
                     else
                     {
-                        Console.WriteLine("Error, Decompile target {0} does not exist", Path.Combine(source, filename));
+                        Console.WriteLine("ERROR: Decompile target {0} does not exist", Path.Combine(source, filename));
                         //Console.ReadLine();
                         return 3;
                     }
@@ -100,7 +101,7 @@ namespace SucDecompiler
                 }
                 else
                 {
-                    Console.WriteLine("Error, Decompile source {0} does not exist", source);
+                    Console.WriteLine("ERROR: Decompile source {0} does not exist", source);
                     //Console.ReadLine();
                     return 4;
                 }

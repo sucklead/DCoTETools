@@ -28,7 +28,8 @@ namespace CocCompiler
                 }
                 else
                 {
-                    Filename = @"S:\workspaces\DCoTETools\SucCompiler\functiontable.csv";
+                    Filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "functiontable.csv");
+                    //Filename = @"S:\workspaces\DCoTETools\SucCompiler\functiontable.csv";
                 }
                 string[] lines = File.ReadAllLines(Filename);
                 foreach (string line in lines)

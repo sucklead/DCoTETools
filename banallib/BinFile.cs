@@ -111,28 +111,28 @@ namespace banallib
                 using (BinaryReader reader = new BinaryReader(memoryStream, Encoding.GetEncoding(1252)))
                 {
                     parsedContent.ScriptName = this.ReadString(reader);
-                    Console.WriteLine("Script Name: {0}", parsedContent.ScriptName);
+                    //Console.Write("Decompiling {0}...", parsedContent.ScriptName);
 
                     reader.BaseStream.Position = 256;
 
                     parsedContent.LengthOfOpCodes = reader.ReadInt32();
-                    Console.WriteLine("LengthOfOpCodes: {0}", parsedContent.LengthOfOpCodes);
+                    //Console.Write("LengthOfOpCodes: {0}", parsedContent.LengthOfOpCodes);
 
                     parsedContent.StartOfOpCodes = reader.ReadInt32();
-                    Console.WriteLine("StartOfOpCodes: {0}", parsedContent.StartOfOpCodes);
+                    //Console.Write(", StartOfOpCodes: {0}", parsedContent.StartOfOpCodes);
 
                     parsedContent.NumberOfValues = reader.ReadInt32();
-                    Console.WriteLine("NumberOfValues: {0}", parsedContent.NumberOfValues);
+                    //Console.Write(", NumberOfValues: {0}", parsedContent.NumberOfValues);
 
                     parsedContent.BaseAddress = (Int16)reader.ReadInt32();
-                    Console.WriteLine("BaseAddress: {0}", parsedContent.BaseAddress);
+                    //Console.Write(", BaseAddress: {0}", parsedContent.BaseAddress);
                     if (parsedContent.BaseAddress == 430)
                     {
                         parsedContent.IsOldFile = true;
                     }
 
                     parsedContent.StartOfValues = reader.ReadInt32();
-                    Console.WriteLine("StartOfValues in file: {0}", parsedContent.StartOfValues);
+                    //Console.WriteLine(", StartOfValues in file: {0}", parsedContent.StartOfValues);
 
                     //make sure we are at start of opcodes
                     //reader.BaseStream.Position = parsedContent.StartOfOpCodes;
@@ -154,7 +154,7 @@ namespace banallib
 
                     ParseOpCodes(parsedContent, reader);
 
-
+                    //Console.WriteLine("OK");
                 }
             }
 

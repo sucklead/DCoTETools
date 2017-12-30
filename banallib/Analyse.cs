@@ -36,7 +36,7 @@ namespace banallib
                 Console.WriteLine("Failed to load file");
                 return null;
             }
-            Console.WriteLine("Loading file {0} ({1})...", binFile.FileName, binFile.FileLength);
+            //Console.WriteLine("Loading file {0} ({1})...", binFile.FileName, binFile.FileLength);
             ParsedContent parsedContent = binFile.Parse();
             //if (parsedContent.ValuesList != null)
             //{
