@@ -70,9 +70,7 @@ namespace SucDecompiler
         Encoding ansii = Encoding.GetEncoding(1252);
 
         public DeCompiler()
-            {
-            FunctionTable.LoadData();
-
+        {
             this.Analyse = new Analyse();
 
             //this.Analyse.NewBase = 605;
@@ -106,6 +104,14 @@ namespace SucDecompiler
                 //{
                 //    return;
                 //}
+            }
+        }
+
+        internal void Initialise()
+        {
+            if (!FunctionTable.LoadData())
+            {
+                throw new Exception("DeCompiler could not start!");
             }
         }
 

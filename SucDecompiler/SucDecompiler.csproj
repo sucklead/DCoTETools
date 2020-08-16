@@ -201,8 +201,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\workspaces\DCoTEIDE\DCoTE\tools\"
-copy /Y "fixtable.csv" "S:\workspaces\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "S:\workspaces\sucklead\DCoTEIDE\DCoTE\tools\"
+copy /Y "fixtable.csv" "S:\workspaces\sucklead\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.2.0.0\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.2.0.0\build\dotnet\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -213,6 +213,9 @@ copy /Y "fixtable.csv" "S:\workspaces\DCoTEIDE\DCoTE\tools\"</PostBuildEvent>
     <Error Condition="!Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets'))" />
   </Target>
   <Import Project="..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" />
+  <PropertyGroup>
+    <PreBuildEvent>copy /Y $(SolutionDir)\SucCompiler\functiontable.csv $(TargetDir)</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

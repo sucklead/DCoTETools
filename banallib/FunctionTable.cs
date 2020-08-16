@@ -24,13 +24,22 @@ namespace banallib
                 {
                     lines = File.ReadAllLines(@"functiontable.csv");
                 }
-                else if (File.Exists(@"S:\workspaces\DCoTETools\SucCompiler\functiontable.csv"))
-                {
-                    lines = File.ReadAllLines(@"S:\workspaces\DCoTETools\SucCompiler\functiontable.csv");
-                }
                 else
                 {
-                    return false;
+                    var relativeFunctionTable = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), @"functiontable.csv");
+                    if (File.Exists(relativeFunctionTable))
+                    {
+                        lines = File.ReadAllLines(relativeFunctionTable);
+                    }
+                    //else if (File.Exists(@"T:\workspaces\sucklead\DCoTETools\SucCompiler\functiontable.csv"))
+                    //{
+                    //    lines = File.ReadAllLines(@"T:\workspaces\sucklead\DCoTETools\SucCompiler\functiontable.csv");
+                    //}
+                    else
+                    {
+                        Console.WriteLine("No functiontable.csv was found!");
+                        return false;
+                    }
                 }
 
                 foreach (string line in lines)

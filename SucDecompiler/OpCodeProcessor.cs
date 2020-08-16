@@ -560,16 +560,25 @@ namespace SucDecompiler
                 }
                 else if (dataType == "Float")
                 {
-                    //Double
-                    float value = float.Parse(VariableSet.GetCurrentValue(variable).ToString().Replace("\"", "").Replace(@"\", ""));
+                    //Single
+                    //Single value = Single.Parse(VariableSet.GetCurrentValue(variable) as string); //.ToString().Replace("\"", "").Replace(@"\", ""));
+                    //if (dataIndex.IsNegative)
+                    //{
+                    //    value = value * -1;
+                    //}
+                    string stringValue = VariableSet.GetCurrentValue(variable) as string;
                     if (dataIndex.IsNegative)
                     {
-                        value = value * -1;
+                        stringValue = "-" + stringValue;
                     }
 
-                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(value));
+                    double value = double.Parse(stringValue);
+
+                    expressionSyntax = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(stringValue, value));
                     // cope with -0 !!!
-                    if (value == 0
+                    if (//(stringValue == "-0"
+                        //|| stringValue == "-0.0")
+                        value == 0
                         && dataIndex.IsNegative)
                     {
                         expressionSyntax = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.UnaryMinusExpression, expressionSyntax);

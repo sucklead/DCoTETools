@@ -29,6 +29,7 @@ namespace SucDecompiler
         {
             Variables = new Dictionary<short, Variable>();
             ValueList = new List<ValueViewModel>();
+            //s = BitConverter.ToSingle(BitConverter.GetBytes((Int32)sv), 0).ToString();
 
             this.ValueList = new List<ValueViewModel>();
             foreach (Value value in parsedContent.ValuesList)
@@ -48,6 +49,16 @@ namespace SucDecompiler
                     if (valueViewModel.DataType == DataTypeType.Float)
                     {
                         valueViewModel.SubValue1 = BitConverter.ToSingle(BitConverter.GetBytes((Int32)(value.SubValues[0])), 0);
+
+                        ////return string.Format("{0:G9}", sv);
+                        //if (singleValue == 0)
+                        //{
+                        //    valueViewModel.SubValue1 = 0;
+                        //}
+                        //else
+                        //{
+                        //    valueViewModel.SubValue1 = singleValue; // string.Format("{0:0.0####}", valueViewModel.SubValue1);
+                        //}
                     }
                     else
                     {
@@ -168,40 +179,31 @@ namespace SucDecompiler
                 if (variable.Value.Static
                     && variable.Value.Used == true)
                 {
-                    if (variable.Value.Used == false)
-                    {
-                        Console.WriteLine();
-                    }
-                    //SyntaxToken firstToken = block.DescendantTokens().Where(n => n.HasAnnotation(new SyntaxAnnotation("StaticVar", variable.Key.ToString()))).Single();
                     //find the static value
-                    object staticValue = GetCurrentValue(variable.Key);
+                    string staticValue = (string)GetCurrentValue(variable.Key); //.ToString();
 
-                    //SyntaxKind literalKind;
-                    //if (staticValue is string)
-                    //{
-                    //    staticValue = "\"" + (string)staticValue + "\"";
-                    //}
+                    IEnumerable<SyntaxToken> tokens = null;
+                    if (staticValue.Contains(@"\"))
+                    {
+                        staticValue = "\"" + staticValue + "\"";
+                        tokens = block.DescendantTokens().Where(n => n.Text == staticValue && n.SpanStart > insertSpanStart).OrderBy(o => o.SpanStart);
+                    }
+                    else if (variable.Value.DataType == "Float"
+                             || variable.Value.DataType == "Int")
+                    {
+                        //if (staticValue.EndsWith(".0"))
+                        //{
+                        //    staticValue = staticValue.Substring(0, staticValue.Length - 2);
+                        //}
+                        var negStaticValue = "-" + staticValue;
+                        tokens = block.DescendantTokens().Where(n => (n.ValueText == staticValue || n.ValueText == negStaticValue) && n.SpanStart > insertSpanStart).OrderBy(o => o.SpanStart);
+                    }
+                    else
+                    {
+                        tokens = block.DescendantTokens().Where(n => n.ValueText == staticValue && n.SpanStart > insertSpanStart).OrderBy(o => o.SpanStart);
+                    }
 
-                    //foreach (var node in block.DescendantNodes().OfType<LiteralExpressionSyntax>().Where(n => n.GetText().ToString() == staticValue.ToString()))
-                    //{
-                    //    Console.WriteLine();
-                    //    //insertAfter = node.DescendantNodes().Where(n => n.Kind() == SyntaxKind.SemicolonToken).First();
-                    //    break;
-                    //}
-
-                    //SyntaxNode fromNode = null;
-                    //if (insertAfterNode == null)
-                    //{
-                    //    fromNode = block;
-                    //}
-                    //else
-                    //{
-                    //    fromNode = insertAfterNode;
-                    //}
-
-                    //foreach (var token in block.DescendantTokens().Where(n => n.ValueText == staticValue.ToString()).Where(o => o.SpanStart > insertSpanStart).First())
-                    //{
-                    var tokens = block.DescendantTokens().Where(n => n.ValueText == staticValue.ToString() && n.SpanStart > insertSpanStart);
+                    //check token count
                     if (tokens.Count() > 0)
                     {
                         var token = tokens.First();
@@ -224,22 +226,22 @@ namespace SucDecompiler
                                 insertIsAfter = true;
                             }
                         }
-                        insertSpanStart = token.SpanStart;
-                        //    break;
-                        //}
+                        //insertSpanStart = insertToken.Span.End;
+                        insertSpanStart = token.Span.End;
+                    }
+                    else
+                    {
+                        foreach (var token in block.DescendantTokens().Where(n => n.SpanStart > insertSpanStart).OrderBy(o => o.SpanStart))
+                        {
+                            ; //Console.WriteLine(token.ToString());
+                        }
+
+                        ;
                     }
                 }
                 else
                 {
-                    //SyntaxTokenList newTokens = new SyntaxTokenList();
-                    //newTokens = newTokens.Add(insertAfter);
                     LocalDeclarationStatementSyntax localDeclarationStatementSyntax = GetVariableDeclaration(variable.Value);
-                    //newTokens.Add(variableToken.DescendantNodesAndTokensAndSelf);
-                    //block = block.ReplaceToken(insertAfter, insertAfter);
-                    //StatementSyntax statementSyntax = localDeclarationStatementSyntax as StatementSyntax;
-                    //var varNode = SyntaxFactory.("\"valid regex\"");
-                    //SyntaxAnnotation syntaxAnnotation = new SyntaxAnnotation("Variable", variable.Key.ToString());
-
                     BlockSyntax addBlock = SyntaxFactory.Block(localDeclarationStatementSyntax); //.WithAdditionalAnnotations(syntaxAnnotation);
 
                     if (insertNode == null)
@@ -258,9 +260,8 @@ namespace SucDecompiler
                         }
                     }
 
-                    //insertAfterNode = block.DescendantNodes().OfType<LocalDeclarationStatementSyntax>().Where(n => n.HasAnnotation(syntaxAnnotation)).Single();
                     insertNode = block.DescendantNodes().OfType<LocalDeclarationStatementSyntax>().Last();
-                    insertSpanStart = insertNode.SpanStart;
+                    insertSpanStart = insertNode.Span.End;
                     insertIsAfter = true;
                 }
             }
@@ -373,9 +374,48 @@ namespace SucDecompiler
             //    return string.Format("\"{0}\"", sv);
             //}
 
+            // deal with differences in precision
+            if (vvm.DataType == DataTypeType.Float)
+            {
+                //if (vvm.Address == 827)
+                //{
+                //    ;
+                //}
+                ////string s = string.Format("{0:0.0#######}", sv);
+                //string s = string.Format("{0:G9}", sv);
+                
+                string s = sv.ToString();
+                int index = s.IndexOf('.');
+                if (index < 0)
+                {
+                    s = s + ".0";
+                }
+                //if (index >= 0)
+                //{
+                //    s = s.Substring(0, Math.Min(index + 6, s.Length));
+
+                //    s = s.TrimEnd('0');
+                //}
+                //else
+                //{
+                //    s = s + ".";
+                //}
+
+                // add on a trailing 0?
+                //if (s.Last<char>() == '.')
+                //{
+                //    s = s + "0";
+                //}
+
+
+                //if (s.EndsWith(".0"))
+                //{
+                //    return s.Substring(0, s.Length - 2);
+                //}
+                return s;
+            }
             return sv.ToString();
         }
-
 
     }
 }

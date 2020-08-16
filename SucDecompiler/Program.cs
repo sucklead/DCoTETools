@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -38,7 +39,7 @@ namespace SucDecompiler
                 Console.WriteLine("The file fixtable.csv holds a list of fixes for specific files.");
                 Console.WriteLine("They are to fix bugs in the original source and once those bugs");
                 Console.WriteLine("are fixed they won't be needed anymore.");
-                return 1;
+                return throwError(1);
             }
 
             //set source and target
@@ -58,14 +59,25 @@ namespace SucDecompiler
                 fixTableFile = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "fixtable.csv");
                 if (!File.Exists(fixTableFile))
                 {
-                    Console.WriteLine("Fix table fixtable.csv not found!");
-                    return -5;
+                    Console.Error.WriteLine("Fix table fixtable.csv not found!");
+                    return throwError(-5);
                 }
             }
             FixTable.LoadFixTable(fixTableFile);
 
             //set the options
             DeCompiler deCompiler = new DeCompiler();
+
+            try
+            {
+                deCompiler.Initialise();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("ERROR: {0}", ex);
+                return throwError(-6);
+            }
+
             deCompiler.SourceDirectory = source;
             deCompiler.TargetDirectory = target;
 
@@ -86,9 +98,13 @@ namespace SucDecompiler
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: Decompile target {0} does not exist", Path.Combine(source, filename));
-                        //Console.ReadLine();
-                        return 3;
+                        Console.Error.WriteLine("ERROR: Decompile target {0} does not exist", Path.Combine(source, filename));
+
+                        if (Debugger.IsAttached)
+                        {
+                            Console.ReadLine();
+                        }
+                        return throwError(3);
                     }
                 }
             }
@@ -101,9 +117,8 @@ namespace SucDecompiler
                 }
                 else
                 {
-                    Console.WriteLine("ERROR: Decompile source {0} does not exist", source);
-                    //Console.ReadLine();
-                    return 4;
+                    Console.Error.WriteLine("ERROR: Decompile source {0} does not exist", source);
+                    return throwError(4);
                 }
             }
             //save function table if anything has changed
@@ -111,8 +126,16 @@ namespace SucDecompiler
 
             Console.WriteLine("Decompile completed at {0}.", DateTime.Now);
             //Console.WriteLine("\n\nPress <Enter> to exit..");
-            //Console.ReadLine();
-            return 0;
+            return throwError(0);
+        }
+
+        static int throwError(int errorCode)
+        {
+            if (Debugger.IsAttached)
+            {
+                Console.ReadLine();
+            }
+            return errorCode;
         }
     }
 }
